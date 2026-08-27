@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dary BDS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="header-brand-name">🏠 Dary BDS</span>
+    </div>
+    <div class="header-contact">
+      <% if (settings.phone) { %>
+      <a href="tel:<%= settings.phone %>" class="header-contact-item">
+        <span class="header-contact-icon">📞</span>
+        <span><%= settings.phone %></span>
+      </a>
+      <% } %>
+      <% if (settings.zalo) { %>
+      <a href="https://zalo.me/<%= settings.zalo %>" target="_blank" class="header-contact-item">
+        <span class="header-contact-icon">💬</span>
+        <span>Zalo</span>
+      </a>
+      <% } %>
+      <% if (settings.facebook) { %>
+      <a href="<%= settings.facebook %>" target="_blank" class="header-contact-item">
+        <span class="header-contact-icon">📘</span>
+        <span>Facebook</span>
+      </a>
+      <% } %>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1 class="hero-title">Bất động sản <span>uy tín</span><br>giá trị thật</h1>
+    <p class="hero-sub">Danh sách các sản phẩm bất động sản chọn lọc — căn hộ, nhà ở, đất nền.</p>
+  </div>
+</section>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('canho', this)">🏢 Căn hộ</button>
+    <button class="tab-btn" onclick="switchTab('nhao', this)">🏠 Nhà ở</button>
+    <button class="tab-btn" onclick="switchTab('dat', this)">🌿 Đất</button>
+  </div>
+</div>
+
+<!-- SẢN PHẨM -->
+<section class="products-section">
+
+  <!-- CĂNG HỘ -->
+  <div id="tab-canho" class="tab-content">
+    <div class="products-grid">
+      <% const canho = products.filter(p => p.category === 'canho'); %>
+      <% if (canho.length === 0) { %>
+        <div class="empty-state">
+          <span class="empty-icon">🏢</span>
+          <p class="empty-text">Chưa có căn hộ nào</p>
+        </div>
+      <% } else { %>
+        <% canho.forEach(p => { %>
+          <a href="/product/<%= p._id %>" class="product-card">
+            <% if (p.images && p.images.length > 0) { %>
+              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% } else { %>
+              <div class="product-card-img-placeholder">🏢</div>
+            <% } %>
+            <div class="product-card-body">
+              <span class="product-card-category">Căn hộ</span>
+              <div class="product-card-name"><%= p.name %></div>
+              <% if (p.price) { %><div class="product-card-price"><%= p.price %></div><% } %>
+              <% if (p.location) { %><div class="product-card-location">📍 <%= p.location %></div><% } %>
+              <% if (p.contact) { %><div class="product-card-contact">Liên hệ: <%= p.contact %></div><% } %>
+            </div>
+          </a>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- NHÀ Ở -->
+  <div id="tab-nhao" class="tab-content" style="display:none">
+    <div class="products-grid">
+      <% const nhao = products.filter(p => p.category === 'nhao'); %>
+      <% if (nhao.length === 0) { %>
+        <div class="empty-state">
+          <span class="empty-icon">🏠</span>
+          <p class="empty-text">Chưa có nhà ở nào</p>
+        </div>
+      <% } else { %>
+        <% nhao.forEach(p => { %>
+          <a href="/product/<%= p._id %>" class="product-card">
+            <% if (p.images && p.images.length > 0) { %>
+              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% } else { %>
+              <div class="product-card-img-placeholder">🏠</div>
+            <% } %>
+            <div class="product-card-body">
+              <span class="product-card-category">Nhà ở</span>
+              <div class="product-card-name"><%= p.name %></div>
+              <% if (p.price) { %><div class="product-card-price"><%= p.price %></div><% } %>
+              <% if (p.location) { %><div class="product-card-location">📍 <%= p.location %></div><% } %>
+              <% if (p.contact) { %><div class="product-card-contact">Liên hệ: <%= p.contact %></div><% } %>
+            </div>
+          </a>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ĐẤT -->
+  <div id="tab-dat" class="tab-content" style="display:none">
+    <div class="products-grid">
+      <% const dat = products.filter(p => p.category === 'dat'); %>
+      <% if (dat.length === 0) { %>
+        <div class="empty-state">
+          <span class="empty-icon">🌿</span>
+          <p class="empty-text">Chưa có đất nào</p>
+        </div>
+      <% } else { %>
+        <% dat.forEach(p => { %>
+          <a href="/product/<%= p._id %>" class="product-card">
+            <% if (p.images && p.images.length > 0) { %>
+              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% } else { %>
+              <div class="product-card-img-placeholder">🌿</div>
+            <% } %>
+            <div class="product-card-body">
+              <span class="product-card-category">Đất</span>
+              <div class="product-card-name"><%= p.name %></div>
+              <% if (p.price) { %><div class="product-card-price"><%= p.price %></div><% } %>
+              <% if (p.location) { %><div class="product-card-location">📍 <%= p.location %></div><% } %>
+              <% if (p.contact) { %><div class="product-card-contact">Liên hệ: <%= p.contact %></div><% } %>
+            </div>
+          </a>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <p>© 2026 Dary BDS — Bất động sản uy tín</p>
+</footer>
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'block';
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>

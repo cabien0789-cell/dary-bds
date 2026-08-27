@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= product.name %> - Dary BDS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="header-brand">
+      <span class="header-brand-name">🏠 Dary BDS</span>
+    </a>
+    <div class="header-contact">
+      <% if (settings.phone) { %>
+      <a href="tel:<%= settings.phone %>" class="header-contact-item">
+        <span class="header-contact-icon">📞</span>
+        <span><%= settings.phone %></span>
+      </a>
+      <% } %>
+      <% if (settings.zalo) { %>
+      <a href="https://zalo.me/<%= settings.zalo %>" target="_blank" class="header-contact-item">
+        <span class="header-contact-icon">💬</span>
+        <span>Zalo</span>
+      </a>
+      <% } %>
+      <% if (settings.facebook) { %>
+      <a href="<%= settings.facebook %>" target="_blank" class="header-contact-item">
+        <span class="header-contact-icon">📘</span>
+        <span>Facebook</span>
+      </a>
+      <% } %>
+    </div>
+  </div>
+</header>
+
+<!-- NỘI DUNG -->
+<div class="detail-wrap">
+
+  <a href="/" class="detail-back">← Quay lại</a>
+
+  <!-- MEDIA: VIDEO + ẢNH -->
+  <div class="detail-media">
+    <% if (product.video) { %>
+    <video class="detail-video" controls>
+      <source src="<%= product.video %>" type="video/mp4">
+    </video>
+    <% } %>
+    <% if (product.images && product.images.length > 0) { %>
+    <div class="detail-images">
+      <% product.images.forEach((img, i) => { %>
+        <% const url = typeof img === 'string' ? img : img.url; %>
+        <img class="detail-img" src="<%= url %>" alt="Ảnh <%= i+1 %>" loading="lazy" onclick="openLightbox('<%= url %>')">
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- THÔNG TIN SẢN PHẨM -->
+  <div class="detail-info">
+    <% const categoryLabel = { canho: 'Căn hộ', nhao: 'Nhà ở', dat: 'Đất' }; %>
+    <span class="detail-category"><%= categoryLabel[product.category] || product.category %></span>
+    <h1 class="detail-name"><%= product.name %></h1>
+    <% if (product.price) { %><div class="detail-price"><%= product.price %></div><% } %>
+    <div class="detail-meta">
+      <% if (product.location) { %>
+      <div class="detail-meta-item">
+        <span class="detail-meta-label">📍 Vị trí:</span>
+        <span><%= product.location %></span>
+      </div>
+      <% } %>
+      <% if (product.contact) { %>
+      <div class="detail-meta-item">
+        <span class="detail-meta-label">📞 Liên hệ:</span>
+        <span><%= product.contact %></span>
+      </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- MÔ TẢ CHI TIẾT -->
+  <% if (product.description) { %>
+  <div class="detail-description">
+    <div class="detail-description-title">📄 Mô tả chi tiết</div>
+    <div class="detail-description-content"><%- product.description %></div>
+  </div>
+  <% } %>
+
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <p>© 2026 Dary BDS — Bất động sản uy tín</p>
+</footer>
+
+<script>
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+</script>
+
+</body>
+</html>

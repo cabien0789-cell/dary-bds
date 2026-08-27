@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập Admin - Dary BDS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="admin-login-body">
+
+  <div class="admin-login-box">
+
+    <div class="admin-login-title">🏠 Dary BDS</div>
+    <div class="admin-login-sub">Đăng nhập trang quản trị</div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="error-box"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/admin/login">
+      <div class="field-group">
+        <label>Tên đăng nhập</label>
+        <input type="text" name="username" placeholder="Nhập tên đăng nhập..." autocomplete="username" required>
+      </div>
+      <div class="field-group">
+        <label>Mật khẩu</label>
+        <input type="password" name="password" placeholder="Nhập mật khẩu..." autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Đăng nhập</button>
+    </form>
+
+  </div>
+
+</body>
+</html>

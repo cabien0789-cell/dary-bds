@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị - Dary BDS</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="admin-topbar">
+  <div class="admin-topbar-brand">🏠 Dary BDS — Quản trị</div>
+  <div class="admin-topbar-right">
+    <a href="/" target="_blank" class="btn btn-outline btn-sm">Xem trang web</a>
+    <a href="/admin/logout" class="btn btn-logout btn-sm">Đăng xuất</a>
+  </div>
+</div>
+
+<div class="admin-wrap">
+
+  <!-- THÔNG TIN LIÊN HỆ -->
+  <div class="admin-section">
+    <div class="admin-section-title">📞 Thông tin liên hệ</div>
+    <div class="settings-card">
+      <form method="POST" action="/admin/settings">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Số điện thoại</label>
+            <input type="text" name="phone" value="<%= settings.phone || '' %>" placeholder="Ví dụ: 0901234567">
+          </div>
+          <div class="field-group">
+            <label>Zalo (số điện thoại Zalo)</label>
+            <input type="text" name="zalo" value="<%= settings.zalo || '' %>" placeholder="Ví dụ: 0901234567">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Facebook (link trang Facebook)</label>
+          <input type="url" name="facebook" value="<%= settings.facebook || '' %>" placeholder="Ví dụ: https://facebook.com/trang-cua-ban">
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu thông tin liên hệ</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- THÊM SẢN PHẨM MỚI -->
+  <div class="admin-section">
+    <div class="admin-section-title">➕ Thêm sản phẩm mới</div>
+    <div class="product-form-card">
+      <form method="POST" action="/admin/products/create" enctype="multipart/form-data" id="createForm">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Tên sản phẩm *</label>
+            <input type="text" name="name" placeholder="Ví dụ: Căn hộ 2PN view sông..." required>
+          </div>
+          <div class="field-group">
+            <label>Loại</label>
+            <select name="category">
+              <option value="canho">Căn hộ</option>
+              <option value="nhao">Nhà ở</option>
+              <option value="dat">Đất</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Giá bán</label>
+            <input type="text" name="price" placeholder="Ví dụ: 2.5 tỷ">
+          </div>
+          <div class="field-group">
+            <label>Vị trí</label>
+            <input type="text" name="location" placeholder="Ví dụ: Quận 7, TP.HCM">
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Thông tin liên hệ riêng (không bắt buộc)</label>
+          <input type="text" name="contact" placeholder="Ví dụ: 0901234567">
+        </div>
+        <div class="field-group">
+          <label>Ảnh sản phẩm (có thể chọn nhiều ảnh)</label>
+          <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
+        </div>
+        <div class="field-group">
+          <label>Video (không bắt buộc)</label>
+          <input type="file" name="video" accept="video/mp4">
+        </div>
+        <div class="field-group">
+          <label>Mô tả chi tiết</label>
+          <input type="hidden" name="description" id="createDescription">
+          <div class="note-toolbar">
+            <div class="note-toolbar-row">
+              <span class="toolbar-label">Định dạng</span>
+              <button type="button" class="toolbar-btn" onclick="createEditor.focus(); document.execCommand('bold')"><b>B</b></button>
+              <button type="button" class="toolbar-btn" onclick="createEditor.focus(); document.execCommand('italic')"><i style="font-family:Georgia,serif;font-size:15px;font-weight:400;">I</i></button>
+              <button type="button" class="toolbar-btn" onclick="createEditor.focus(); document.execCommand('underline')"><u>U</u></button>
+              <div class="toolbar-sep"></div>
+              <button type="button" class="toolbar-btn" onclick="createEditor.focus(); document.execCommand('justifyLeft')">
+                <svg width="16" height="14" viewBox="0 0 16 14" fill="currentColor"><rect x="0" y="0" width="11.2" height="2.5" rx="1.2"/><rect x="0" y="5.5" width="16" height="2.5" rx="1.2"/><rect x="0" y="11" width="8" height="2.5" rx="1.2"/></svg>
+              </button>
+              <button type="button" class="toolbar-btn" onclick="createEditor.focus(); document.execCommand('justifyCenter')">
+                <svg width="16" height="14" viewBox="0 0 16 14" fill="currentColor"><rect x="2.4" y="0" width="11.2" height="2.5" rx="1.2"/><rect x="0" y="5.5" width="16" height="2.5" rx="1.2"/><rect x="4" y="11" width="8" height="2.5" rx="1.2"/></svg>
+              </button>
+            </div>
+            <div class="note-toolbar-row">
+              <span class="toolbar-label">Cỡ chữ</span>
+              <button type="button" class="toolbar-btn" onclick="setFontSizeCreate(14)">S</button>
+              <button type="button" class="toolbar-btn" onclick="setFontSizeCreate(16)">M</button>
+              <button type="button" class="toolbar-btn" onclick="setFontSizeCreate(20)">L</button>
+              <button type="button" class="toolbar-btn" onclick="setFontSizeCreate(26)">XL</button>
+            </div>
+            <div class="note-toolbar-row">
+              <label class="toolbar-btn toolbar-img-btn">
+                🖼 Thêm ảnh
+                <input type="file" accept="image/png,image/jpeg,image/jpg" style="display:none" onchange="uploadImageCreate(this)">
+              </label>
+            </div>
+          </div>
+          <div class="note-editor" id="createEditor" contenteditable="true" spellcheck="false"></div>
+          <div id="createImgToolbar" class="img-toolbar" style="display:none;">
+            <button class="img-toolbar-btn" onclick="deleteSelectedImgCreate()">🗑 Xóa</button>
+          </div>
+          <div id="createError" class="note-error" style="display:none;"></div>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="submitCreate()">Thêm sản phẩm</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DANH SÁCH SẢN PHẨM -->
+  <div class="admin-section">
+    <div class="admin-section-title">📋 Danh sách sản phẩm (<%= products.length %>)</div>
+    <% if (products.length === 0) { %>
+      <div style="padding:40px;text-align:center;color:var(--text3);">Chưa có sản phẩm nào.</div>
+    <% } else { %>
+    <div class="admin-products-list">
+      <% products.forEach(p => { %>
+      <div class="admin-product-card">
+        <% if (p.images && p.images.length > 0) { %>
+          <img class="admin-product-img" src="<%= typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url %>" alt="<%= p.name %>">
+        <% } else { %>
+          <div class="admin-product-img-placeholder">🏠</div>
+        <% } %>
+        <div class="admin-product-info">
+          <div class="admin-product-name"><%= p.name %></div>
+          <div class="admin-product-meta">
+            <span class="admin-product-category"><%= { canho: 'Căn hộ', nhao: 'Nhà ở', dat: 'Đất' }[p.category] || p.category %></span>
+            <% if (p.price) { %><span>💰 <%= p.price %></span><% } %>
+            <% if (p.location) { %><span>📍 <%= p.location %></span><% } %>
+          </div>
+        </div>
+        <div class="admin-product-actions">
+          <button class="btn btn-outline btn-sm" onclick="openEditModal('<%= p._id %>')">✏️ Sửa</button>
+          <form method="POST" action="/admin/products/<%= p._id %>/delete" style="display:inline" onsubmit="return confirm('Xóa sản phẩm này? Hành động không thể hoàn tác.')">
+            <button type="submit" class="btn btn-danger btn-sm">🗑 Xóa</button>
+          </form>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- MODAL SỬA SẢN PHẨM -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Sửa sản phẩm</div>
+    <form method="POST" id="editForm" enctype="multipart/form-data">
+      <div class="field-row">
+        <div class="field-group">
+          <label>Tên sản phẩm *</label>
+          <input type="text" name="name" id="editName" required>
+        </div>
+        <div class="field-group">
+          <label>Loại</label>
+          <select name="category" id="editCategory">
+            <option value="canho">Căn hộ</option>
+            <option value="nhao">Nhà ở</option>
+            <option value="dat">Đất</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Giá bán</label>
+          <input type="text" name="price" id="editPrice">
+        </div>
+        <div class="field-group">
+          <label>Vị trí</label>
+          <input type="text" name="location" id="editLocation">
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Thông tin liên hệ riêng</label>
+        <input type="text" name="contact" id="editContact">
+      </div>
+      <div class="field-group">
+        <label>Ảnh hiện tại</label>
+        <div class="images-preview" id="editImagesPreview"></div>
+      </div>
+      <div class="field-group">
+        <label>Thêm ảnh mới</label>
+        <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
+      </div>
+      <div class="field-group" id="editVideoWrap">
+        <label>Video hiện tại</label>
+        <div id="editVideoInfo"></div>
+        <input type="hidden" name="deleteVideo" id="editDeleteVideo" value="no">
+      </div>
+      <div class="field-group">
+        <label>Thay video mới</label>
+        <input type="file" name="video" accept="video/mp4">
+      </div>
+      <div class="field-group">
+        <label>Mô tả chi tiết</label>
+        <input type="hidden" name="description" id="editDescription">
+        <div class="note-toolbar">
+          <div class="note-toolbar-row">
+            <span class="toolbar-label">Định dạng</span>
+            <button type="button" class="toolbar-btn" onclick="editEditor.focus(); document.execCommand('bold')"><b>B</b></button>
+            <button type="button" class="toolbar-btn" onclick="editEditor.focus(); document.execCommand('italic')"><i style="font-family:Georgia,serif;font-size:15px;font-weight:400;">I</i></button>
+            <button type="button" class="toolbar-btn" onclick="editEditor.focus(); document.execCommand('underline')"><u>U</u></button>
+            <div class="toolbar-sep"></div>
+            <button type="button" class="toolbar-btn" onclick="editEditor.focus(); document.execCommand('justifyLeft')">
+              <svg width="16" height="14" viewBox="0 0 16 14" fill="currentColor"><rect x="0" y="0" width="11.2" height="2.5" rx="1.2"/><rect x="0" y="5.5" width="16" height="2.5" rx="1.2"/><rect x="0" y="11" width="8" height="2.5" rx="1.2"/></svg>
+            </button>
+            <button type="button" class="toolbar-btn" onclick="editEditor.focus(); document.execCommand('justifyCenter')">
+              <svg width="16" height="14" viewBox="0 0 16 14" fill="currentColor"><rect x="2.4" y="0" width="11.2" height="2.5" rx="1.2"/><rect x="0" y="5.5" width="16" height="2.5" rx="1.2"/><rect x="4" y="11" width="8" height="2.5" rx="1.2"/></svg>
+            </button>
+          </div>
+          <div class="note-toolbar-row">
+            <span class="toolbar-label">Cỡ chữ</span>
+            <button type="button" class="toolbar-btn" onclick="setFontSizeEdit(14)">S</button>
+            <button type="button" class="toolbar-btn" onclick="setFontSizeEdit(16)">M</button>
+            <button type="button" class="toolbar-btn" onclick="setFontSizeEdit(20)">L</button>
+            <button type="button" class="toolbar-btn" onclick="setFontSizeEdit(26)">XL</button>
+          </div>
+          <div class="note-toolbar-row">
+            <label class="toolbar-btn toolbar-img-btn">
+              🖼 Thêm ảnh
+              <input type="file" accept="image/png,image/jpeg,image/jpg" style="display:none" onchange="uploadImageEdit(this)">
+            </label>
+          </div>
+        </div>
+        <div class="note-editor" id="editEditor" contenteditable="true" spellcheck="false"></div>
+        <div id="editImgToolbar" class="img-toolbar" style="display:none;">
+          <button class="img-toolbar-btn" onclick="deleteSelectedImgEdit()">🗑 Xóa</button>
+        </div>
+        <div id="editError" class="note-error" style="display:none;"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeEditModal()">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="submitEdit()">Lưu thay đổi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── DỮ LIỆU SẢN PHẨM ──
+const allProducts = <%- JSON.stringify(products) %>;
+
+// ═══════════════════════════════════════════════════
+// ── RICH TEXT EDITOR — THÊM SẢN PHẨM (CREATE) ──
+// ═══════════════════════════════════════════════════
+const createEditor = document.getElementById('createEditor');
+const createImgToolbar = document.getElementById('createImgToolbar');
+let createSavedRange = null;
+let createSelectedImg = null;
+let createImageBytesMap = {};
+let createPageReady = false;
+
+// Lưu vị trí con trỏ — CREATE
+createEditor.addEventListener('mouseup', () => saveRangeCreate());
+createEditor.addEventListener('keyup', () => saveRangeCreate());
+createEditor.addEventListener('focus', () => saveRangeCreate());
+
+function saveRangeCreate() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) createSavedRange = sel.getRangeAt(0).cloneRange();
+}
+
+function resetEditorCleanCreate() { createEditor.innerHTML = ''; }
+
+// Cỡ chữ — CREATE
+function setFontSizeCreate(px) {
+  createEditor.focus();
+  const sel = window.getSelection();
+  const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+  if (hasSelection) {
+    document.execCommand('fontSize', false, '7');
+    createEditor.querySelectorAll('font[size="7"]').forEach(el => {
+      el.removeAttribute('size');
+      el.style.fontSize = px + 'px';
+    });
+  } else {
+    const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+    const span = document.createElement('span');
+    span.style.fontSize = px + 'px';
+    span.appendChild(document.createTextNode('\u200b'));
+    if (range) {
+      range.collapse(true);
+      range.insertNode(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.firstChild, 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    } else {
+      createEditor.appendChild(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.firstChild, 1);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+    }
+  }
+}
+
+// Tab — CREATE
+createEditor.addEventListener('keydown', e => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && createSelectedImg) {
+    e.preventDefault();
+    deleteSelectedImgCreate();
+    return;
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    document.execCommand('insertHTML', false, '\u00a0\u00a0\u00a0\u00a0');
+    return;
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    setTimeout(() => {
+      const text = createEditor.innerText.replace(/\u200b/g, '').trim();
+      if (text === '') resetEditorCleanCreate();
+    }, 0);
+  }
+});
+
+// Reset khi xóa toàn bộ mobile — CREATE
+createEditor.addEventListener('input', e => {
+  const text = createEditor.innerText.replace(/\u200b/g, '').trim();
+  if (text === '') {
+    setTimeout(() => {
+      if (createEditor.innerText.replace(/\u200b/g, '').trim() === '') resetEditorCleanCreate();
+    }, 0);
+  }
+});
+
+// Paste — CREATE
+createEditor.addEventListener('paste', e => {
+  e.preventDefault();
+  const clipboardData = e.clipboardData || window.clipboardData;
+  let html = clipboardData.getData('text/html');
+  if (html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    tmp.querySelectorAll('script,style,meta,link,head').forEach(el => el.remove());
+    tmp.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      const div = document.createElement('div');
+      div.innerHTML = el.innerHTML;
+      const sizeMap = { H1:'26px',H2:'22px',H3:'20px',H4:'18px',H5:'16px',H6:'14px' };
+      div.style.fontWeight = 'bold';
+      div.style.fontSize = sizeMap[el.tagName] || '16px';
+      el.replaceWith(div);
+    });
+    tmp.querySelectorAll('ol').forEach(ol => {
+      const frag = document.createDocumentFragment();
+      let idx = 1;
+      ol.querySelectorAll('li').forEach(li => {
+        const div = document.createElement('div');
+        div.innerHTML = idx + '. ' + li.innerHTML;
+        frag.appendChild(div); idx++;
+      });
+      ol.replaceWith(frag);
+    });
+    tmp.querySelectorAll('ul').forEach(ul => {
+      const frag = document.createDocumentFragment();
+      ul.querySelectorAll('li').forEach(li => {
+        const div = document.createElement('div');
+        div.innerHTML = '• ' + li.innerHTML;
+        frag.appendChild(div);
+      });
+      ul.replaceWith(frag);
+    });
+    tmp.querySelectorAll('li').forEach(li => {
+      const div = document.createElement('div');
+      div.innerHTML = li.innerHTML;
+      li.replaceWith(div);
+    });
+    tmp.querySelectorAll('hr').forEach(hr => {
+      const div = document.createElement('div');
+      div.textContent = '──────────────────────────────────────────────────';
+      div.style.color = '#ccc';
+      hr.replaceWith(div);
+    });
+    tmp.querySelectorAll('*').forEach(el => {
+      const allowed = ['style','src','href','alt','width','height','align'];
+      Array.from(el.attributes).forEach(attr => {
+        if (!allowed.includes(attr.name) && !attr.name.startsWith('data-')) el.removeAttribute(attr.name);
+      });
+      if (el.style && el.style.fontSize) el.style.fontSize = '';
+    });
+    const cleanHtml = tmp.innerHTML;
+    const sel = window.getSelection();
+    let isAllSelected = false;
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const editorRange = document.createRange();
+      editorRange.selectNodeContents(createEditor);
+      isAllSelected = (range.startContainer===editorRange.startContainer && range.startOffset===editorRange.startOffset && range.endContainer===editorRange.endContainer && range.endOffset===editorRange.endOffset);
+    }
+    if (isAllSelected) {
+      resetEditorCleanCreate();
+      createEditor.focus();
+      const selAfter = window.getSelection();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(createEditor);
+      newRange.collapse(true);
+      selAfter.removeAllRanges();
+      selAfter.addRange(newRange);
+    } else {
+      document.execCommand('removeFormat', false, null);
+    }
+    document.execCommand('insertHTML', false, cleanHtml);
+    createEditor.querySelectorAll('img').forEach(img => {
+      if (!img.dataset.bound) { img.dataset.bound='1'; bindImageEventsCreate(img); }
+    });
+  } else {
+    document.execCommand('insertText', false, clipboardData.getData('text/plain'));
+  }
+});
+
+// Mutation Observer — CREATE
+let createSnapshotBeforeInput = null;
+createEditor.addEventListener('beforeinput', e => {
+  if (['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) {
+    createSnapshotBeforeInput = createEditor.innerHTML;
+  } else { createSnapshotBeforeInput = null; }
+});
+createEditor.addEventListener('input', e => {
+  if (!createSnapshotBeforeInput) return;
+  if (!['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) return;
+  const currentText = createEditor.innerText.replace(/\u200b/g,'').trim();
+  if (currentText === '') return;
+  const tmpBefore = document.createElement('div');
+  tmpBefore.innerHTML = createSnapshotBeforeInput;
+  function getMap(root) {
+    const map = [];
+    function walk(node) {
+      if (node.nodeType===3) {
+        const text = node.textContent;
+        if (!text) return;
+        let parent = node.parentNode, bold=false, italic=false, underline=false;
+        while (parent && parent!==root) {
+          const tag = parent.tagName;
+          if (tag==='B'||tag==='STRONG'||(parent.style&&parent.style.fontWeight==='bold')) bold=true;
+          if (tag==='I'||tag==='EM'||(parent.style&&parent.style.fontStyle==='italic')) italic=true;
+          if (tag==='U'||(parent.style&&parent.style.textDecoration&&parent.style.textDecoration.includes('underline'))) underline=true;
+          parent=parent.parentNode;
+        }
+        map.push({text:text.trim(),bold,italic,underline,node});
+      } else if (node.nodeType===1) { node.childNodes.forEach(walk); }
+    }
+    root.childNodes.forEach(walk);
+    return map;
+  }
+  const beforeMap = getMap(tmpBefore);
+  const currentMap = getMap(createEditor);
+  beforeMap.forEach(bItem => {
+    if (!bItem.text) return;
+    const match = currentMap.find(cItem => cItem.text===bItem.text && !cItem.bold && !cItem.italic && !cItem.underline);
+    if (match && (bItem.bold||bItem.italic||bItem.underline)) {
+      const textNode = match.node;
+      const parent = textNode.parentNode;
+      if (!parent) return;
+      const span = document.createElement('span');
+      if (bItem.bold) span.style.fontWeight='bold';
+      if (bItem.italic) span.style.fontStyle='italic';
+      if (bItem.underline) span.style.textDecoration='underline';
+      parent.insertBefore(span, textNode);
+      span.appendChild(textNode);
+    }
+  });
+  createSnapshotBeforeInput = null;
+}, true);
+
+// Ảnh — CREATE
+function bindImageEventsCreate(img) {
+  img.addEventListener('click', e => { e.stopPropagation(); selectImgCreate(img); });
+}
+function selectImgCreate(img) {
+  if (!createPageReady) return;
+  if (createSelectedImg && createSelectedImg !== img) deselectImgCreate();
+  createSelectedImg = img;
+  img.classList.add('img-selected');
+  const rect = img.getBoundingClientRect();
+  createImgToolbar.style.display = 'flex';
+  createImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+  createImgToolbar.style.left = rect.left + 'px';
+  if (!img.nextSibling || !img.nextSibling.classList || !img.nextSibling.classList.contains('img-resize-handle')) {
+    const handle = document.createElement('div');
+    handle.className = 'img-resize-handle';
+    handle.addEventListener('mousedown', e => startResizeCreate(e, img));
+    handle.addEventListener('touchstart', e => startResizeTouchCreate(e, img), { passive: false });
+    img.parentNode.insertBefore(handle, img.nextSibling);
+    handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+  }
+}
+function deselectImgCreate() {
+  if (!createSelectedImg) return;
+  createSelectedImg.classList.remove('img-selected');
+  const handle = createSelectedImg.nextSibling;
+  if (handle && handle.classList && handle.classList.contains('img-resize-handle')) handle.remove();
+  createSelectedImg = null;
+  createImgToolbar.style.display = 'none';
+}
+function deleteSelectedImgCreate() {
+  if (!createSelectedImg) return;
+  const handle = createSelectedImg.nextSibling;
+  if (handle && handle.classList && handle.classList.contains('img-resize-handle')) handle.remove();
+  createSelectedImg.remove();
+  createSelectedImg = null;
+  createImgToolbar.style.display = 'none';
+}
+document.addEventListener('click', e => {
+  if (e.target !== createSelectedImg && !e.target.closest('#createImgToolbar') && !e.target.closest('.img-resize-handle')) deselectImgCreate();
+});
+function startResizeCreate(e, img) {
+  e.preventDefault();
+  let resizeStartX = e.clientX, resizeStartW = img.offsetWidth;
+  function onMouseMove(e) {
+    const newW = Math.max(60, resizeStartW + e.clientX - resizeStartX);
+    img.style.width = newW + 'px'; img.style.maxWidth = '100%';
+    const handle = img.nextSibling;
+    if (handle && handle.classList && handle.classList.contains('img-resize-handle')) {
+      handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+      handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    }
+    const rect = img.getBoundingClientRect();
+    createImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    createImgToolbar.style.left = rect.left + 'px';
+  }
+  function onMouseUp() { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+function startResizeTouchCreate(e, img) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  let resizeStartX = touch.clientX, resizeStartW = img.offsetWidth;
+  function onTouchMove(e) {
+    const t = e.touches[0];
+    const newW = Math.max(60, resizeStartW + t.clientX - resizeStartX);
+    img.style.width = newW + 'px'; img.style.maxWidth = '100%';
+    const handle = img.nextSibling;
+    if (handle && handle.classList && handle.classList.contains('img-resize-handle')) {
+      handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+      handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    }
+    const rect = img.getBoundingClientRect();
+    createImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    createImgToolbar.style.left = rect.left + 'px';
+  }
+  function onTouchEnd() { document.removeEventListener('touchmove', onTouchMove); document.removeEventListener('touchend', onTouchEnd); }
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+setTimeout(() => { createPageReady = true; }, 800);
+
+// Upload ảnh vào mô tả — CREATE (cần tạo sản phẩm trước rồi mới upload được)
+async function uploadImageCreate(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!['image/png','image/jpeg','image/jpg'].includes(file.type)) {
+    showErrorCreate('Chỉ chấp nhận file png hoặc jpg/jpeg.');
+    input.value = ''; return;
+  }
+  showErrorCreate('Để thêm ảnh vào mô tả, hãy thêm sản phẩm trước rồi vào Sửa để chèn ảnh vào mô tả.');
+  input.value = '';
+}
+
+function showErrorCreate(msg) {
+  const el = document.getElementById('createError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function submitCreate() {
+  document.getElementById('createDescription').value = createEditor.innerHTML;
+  document.getElementById('createForm').submit();
+}
+
+// ═══════════════════════════════════════════════════
+// ── RICH TEXT EDITOR — SỬA SẢN PHẨM (EDIT) ──
+// ═══════════════════════════════════════════════════
+const editEditor = document.getElementById('editEditor');
+const editImgToolbar = document.getElementById('editImgToolbar');
+let editSavedRange = null;
+let editSelectedImg = null;
+let editImageBytesMap = {};
+let editPageReady = false;
+let currentEditId = null;
+
+editEditor.addEventListener('mouseup', () => saveRangeEdit());
+editEditor.addEventListener('keyup', () => saveRangeEdit());
+editEditor.addEventListener('focus', () => saveRangeEdit());
+
+function saveRangeEdit() {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) editSavedRange = sel.getRangeAt(0).cloneRange();
+}
+
+function resetEditorCleanEdit() { editEditor.innerHTML = ''; }
+
+function cleanEditorContentEdit() {
+  editEditor.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+    const div = document.createElement('div');
+    div.innerHTML = el.innerHTML; div.style.fontWeight = 'bold'; el.replaceWith(div);
+  });
+  editEditor.querySelectorAll('ol').forEach(ol => {
+    const frag = document.createDocumentFragment(); let idx = 1;
+    ol.querySelectorAll('li').forEach(li => {
+      const div = document.createElement('div');
+      div.innerHTML = idx + '. ' + li.innerHTML; frag.appendChild(div); idx++;
+    });
+    ol.replaceWith(frag);
+  });
+  editEditor.querySelectorAll('ul').forEach(ul => {
+    const frag = document.createDocumentFragment();
+    ul.querySelectorAll('li').forEach(li => {
+      const div = document.createElement('div');
+      div.innerHTML = '• ' + li.innerHTML; frag.appendChild(div);
+    });
+    ul.replaceWith(frag);
+  });
+  editEditor.querySelectorAll('li').forEach(li => {
+    const div = document.createElement('div'); div.innerHTML = li.innerHTML; li.replaceWith(div);
+  });
+  editEditor.querySelectorAll('hr').forEach(hr => {
+    const div = document.createElement('div');
+    div.textContent = '──────────────────────────────────────────────────';
+    div.style.color = '#ccc'; hr.replaceWith(div);
+  });
+  editEditor.querySelectorAll('div,p').forEach(el => {
+    if (el.style && el.style.borderBottom) {
+      el.style.borderBottom = ''; el.style.margin = '';
+      el.textContent = '──────────────────────────────────────────────────';
+      el.style.color = '#ccc';
+    }
+  });
+}
+
+// Cỡ chữ — EDIT
+function setFontSizeEdit(px) {
+  editEditor.focus();
+  const sel = window.getSelection();
+  const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
+  if (hasSelection) {
+    document.execCommand('fontSize', false, '7');
+    editEditor.querySelectorAll('font[size="7"]').forEach(el => {
+      el.removeAttribute('size'); el.style.fontSize = px + 'px';
+    });
+  } else {
+    const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+    const span = document.createElement('span');
+    span.style.fontSize = px + 'px';
+    span.appendChild(document.createTextNode('\u200b'));
+    if (range) {
+      range.collapse(true); range.insertNode(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.firstChild, 1); newRange.collapse(true);
+      sel.removeAllRanges(); sel.addRange(newRange);
+    } else {
+      editEditor.appendChild(span);
+      const newRange = document.createRange();
+      newRange.setStart(span.firstChild, 1); newRange.collapse(true);
+      sel.removeAllRanges(); sel.addRange(newRange);
+    }
+  }
+}
+
+// Tab — EDIT
+editEditor.addEventListener('keydown', e => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && editSelectedImg) {
+    e.preventDefault(); deleteSelectedImgEdit(); return;
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    document.execCommand('insertHTML', false, '\u00a0\u00a0\u00a0\u00a0'); return;
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    setTimeout(() => {
+      if (editEditor.innerText.replace(/\u200b/g,'').trim() === '') resetEditorCleanEdit();
+    }, 0);
+  }
+});
+
+editEditor.addEventListener('input', e => {
+  if (editEditor.innerText.replace(/\u200b/g,'').trim() === '') {
+    setTimeout(() => {
+      if (editEditor.innerText.replace(/\u200b/g,'').trim() === '') resetEditorCleanEdit();
+    }, 0);
+  }
+});
+
+// Paste — EDIT
+editEditor.addEventListener('paste', e => {
+  e.preventDefault();
+  const clipboardData = e.clipboardData || window.clipboardData;
+  let html = clipboardData.getData('text/html');
+  if (html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    tmp.querySelectorAll('script,style,meta,link,head').forEach(el => el.remove());
+    tmp.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      const div = document.createElement('div');
+      div.innerHTML = el.innerHTML;
+      const sizeMap = { H1:'26px',H2:'22px',H3:'20px',H4:'18px',H5:'16px',H6:'14px' };
+      div.style.fontWeight = 'bold'; div.style.fontSize = sizeMap[el.tagName] || '16px';
+      el.replaceWith(div);
+    });
+    tmp.querySelectorAll('ol').forEach(ol => {
+      const frag = document.createDocumentFragment(); let idx = 1;
+      ol.querySelectorAll('li').forEach(li => {
+        const div = document.createElement('div');
+        div.innerHTML = idx + '. ' + li.innerHTML; frag.appendChild(div); idx++;
+      });
+      ol.replaceWith(frag);
+    });
+    tmp.querySelectorAll('ul').forEach(ul => {
+      const frag = document.createDocumentFragment();
+      ul.querySelectorAll('li').forEach(li => {
+        const div = document.createElement('div');
+        div.innerHTML = '• ' + li.innerHTML; frag.appendChild(div);
+      });
+      ul.replaceWith(frag);
+    });
+    tmp.querySelectorAll('li').forEach(li => {
+      const div = document.createElement('div'); div.innerHTML = li.innerHTML; li.replaceWith(div);
+    });
+    tmp.querySelectorAll('hr').forEach(hr => {
+      const div = document.createElement('div');
+      div.textContent = '──────────────────────────────────────────────────';
+      div.style.color = '#ccc'; hr.replaceWith(div);
+    });
+    tmp.querySelectorAll('*').forEach(el => {
+      const allowed = ['style','src','href','alt','width','height','align'];
+      Array.from(el.attributes).forEach(attr => {
+        if (!allowed.includes(attr.name) && !attr.name.startsWith('data-')) el.removeAttribute(attr.name);
+      });
+      if (el.style && el.style.fontSize) el.style.fontSize = '';
+    });
+    const cleanHtml = tmp.innerHTML;
+    const sel = window.getSelection();
+    let isAllSelected = false;
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const editorRange = document.createRange();
+      editorRange.selectNodeContents(editEditor);
+      isAllSelected = (range.startContainer===editorRange.startContainer && range.startOffset===editorRange.startOffset && range.endContainer===editorRange.endContainer && range.endOffset===editorRange.endOffset);
+    }
+    if (isAllSelected) {
+      resetEditorCleanEdit();
+      editEditor.focus();
+      const selAfter = window.getSelection();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(editEditor); newRange.collapse(true);
+      selAfter.removeAllRanges(); selAfter.addRange(newRange);
+    } else { document.execCommand('removeFormat', false, null); }
+    document.execCommand('insertHTML', false, cleanHtml);
+    editEditor.querySelectorAll('img').forEach(img => {
+      if (!img.dataset.bound) { img.dataset.bound='1'; bindImageEventsEdit(img); }
+    });
+  } else {
+    document.execCommand('insertText', false, clipboardData.getData('text/plain'));
+  }
+});
+
+// Mutation Observer — EDIT
+let editSnapshotBeforeInput = null;
+editEditor.addEventListener('beforeinput', e => {
+  if (['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) {
+    editSnapshotBeforeInput = editEditor.innerHTML;
+  } else { editSnapshotBeforeInput = null; }
+});
+editEditor.addEventListener('input', e => {
+  if (!editSnapshotBeforeInput) return;
+  if (!['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) return;
+  const currentText = editEditor.innerText.replace(/\u200b/g,'').trim();
+  if (currentText === '') return;
+  const tmpBefore = document.createElement('div');
+  tmpBefore.innerHTML = editSnapshotBeforeInput;
+  function getMapEdit(root) {
+    const map = [];
+    function walk(node) {
+      if (node.nodeType===3) {
+        const text = node.textContent;
+        if (!text) return;
+        let parent = node.parentNode, bold=false, italic=false, underline=false;
+        while (parent && parent!==root) {
+          const tag = parent.tagName;
+          if (tag==='B'||tag==='STRONG'||(parent.style&&parent.style.fontWeight==='bold')) bold=true;
+          if (tag==='I'||tag==='EM'||(parent.style&&parent.style.fontStyle==='italic')) italic=true;
+          if (tag==='U'||(parent.style&&parent.style.textDecoration&&parent.style.textDecoration.includes('underline'))) underline=true;
+          parent=parent.parentNode;
+        }
+        map.push({text:text.trim(),bold,italic,underline,node});
+      } else if (node.nodeType===1) { node.childNodes.forEach(walk); }
+    }
+    root.childNodes.forEach(walk);
+    return map;
+  }
+  const beforeMap = getMapEdit(tmpBefore);
+  const currentMap = getMapEdit(editEditor);
+  beforeMap.forEach(bItem => {
+    if (!bItem.text) return;
+    const match = currentMap.find(cItem => cItem.text===bItem.text && !cItem.bold && !cItem.italic && !cItem.underline);
+    if (match && (bItem.bold||bItem.italic||bItem.underline)) {
+      const textNode = match.node;
+      const parent = textNode.parentNode;
+      if (!parent) return;
+      const span = document.createElement('span');
+      if (bItem.bold) span.style.fontWeight='bold';
+      if (bItem.italic) span.style.fontStyle='italic';
+      if (bItem.underline) span.style.textDecoration='underline';
+      parent.insertBefore(span, textNode);
+      span.appendChild(textNode);
+    }
+  });
+  editSnapshotBeforeInput = null;
+}, true);
+
+// Ảnh — EDIT
+function bindImageEventsEdit(img) {
+  img.addEventListener('click', e => { e.stopPropagation(); selectImgEdit(img); });
+}
+function selectImgEdit(img) {
+  if (!editPageReady) return;
+  if (editSelectedImg && editSelectedImg !== img) deselectImgEdit();
+  editSelectedImg = img;
+  img.classList.add('img-selected');
+  const rect = img.getBoundingClientRect();
+  editImgToolbar.style.display = 'flex';
+  editImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+  editImgToolbar.style.left = rect.left + 'px';
+  if (!img.nextSibling || !img.nextSibling.classList || !img.nextSibling.classList.contains('img-resize-handle')) {
+    const handle = document.createElement('div');
+    handle.className = 'img-resize-handle';
+    handle.addEventListener('mousedown', e => startResizeEdit(e, img));
+    handle.addEventListener('touchstart', e => startResizeTouchEdit(e, img), { passive: false });
+    img.parentNode.insertBefore(handle, img.nextSibling);
+    handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+  }
+}
+function deselectImgEdit() {
+  if (!editSelectedImg) return;
+  editSelectedImg.classList.remove('img-selected');
+  const handle = editSelectedImg.nextSibling;
+  if (handle && handle.classList && handle.classList.contains('img-resize-handle')) handle.remove();
+  editSelectedImg = null;
+  editImgToolbar.style.display = 'none';
+}
+function deleteSelectedImgEdit() {
+  if (!editSelectedImg) return;
+  const handle = editSelectedImg.nextSibling;
+  if (handle && handle.classList && handle.classList.contains('img-resize-handle')) handle.remove();
+  editSelectedImg.remove();
+  editSelectedImg = null;
+  editImgToolbar.style.display = 'none';
+}
+function startResizeEdit(e, img) {
+  e.preventDefault();
+  let resizeStartX = e.clientX, resizeStartW = img.offsetWidth;
+  function onMouseMove(e) {
+    const newW = Math.max(60, resizeStartW + e.clientX - resizeStartX);
+    img.style.width = newW + 'px'; img.style.maxWidth = '100%';
+    const handle = img.nextSibling;
+    if (handle && handle.classList && handle.classList.contains('img-resize-handle')) {
+      handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+      handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    }
+    const rect = img.getBoundingClientRect();
+    editImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    editImgToolbar.style.left = rect.left + 'px';
+  }
+  function onMouseUp() { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+function startResizeTouchEdit(e, img) {
+  e.preventDefault();
+  const touch = e.touches[0];
+  let resizeStartX = touch.clientX, resizeStartW = img.offsetWidth;
+  function onTouchMove(e) {
+    const t = e.touches[0];
+    const newW = Math.max(60, resizeStartW + t.clientX - resizeStartX);
+    img.style.width = newW + 'px'; img.style.maxWidth = '100%';
+    const handle = img.nextSibling;
+    if (handle && handle.classList && handle.classList.contains('img-resize-handle')) {
+      handle.style.left = (img.offsetLeft + img.offsetWidth - 16) + 'px';
+      handle.style.top = (img.offsetTop + img.offsetHeight - 16) + 'px';
+    }
+    const rect = img.getBoundingClientRect();
+    editImgToolbar.style.top = (window.scrollY + rect.bottom + 6) + 'px';
+    editImgToolbar.style.left = rect.left + 'px';
+  }
+  function onTouchEnd() { document.removeEventListener('touchmove', onTouchMove); document.removeEventListener('touchend', onTouchEnd); }
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+// Upload ảnh vào mô tả — EDIT
+async function uploadImageEdit(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!['image/png','image/jpeg','image/jpg'].includes(file.type)) {
+    showErrorEdit('Chỉ chấp nhận file png hoặc jpg/jpeg.');
+    input.value = ''; return;
+  }
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch('/admin/products/' + currentEditId + '/upload-image', { method: 'POST', body: formData });
+  const data = await res.json();
+  if (data.error) { showErrorEdit(data.error); input.value = ''; return; }
+  if (data.bytes) editImageBytesMap[data.url] = data.bytes;
+  const img = document.createElement('img');
+  img.src = data.url;
+  img.style.maxWidth = '100%';
+  img.style.borderRadius = '8px';
+  img.style.margin = '8px 0';
+  img.style.display = 'block';
+  bindImageEventsEdit(img);
+  const rangeInsideEditor = editSavedRange && editEditor.contains(editSavedRange.commonAncestorContainer);
+  const lineBreak = document.createElement('br');
+  if (rangeInsideEditor) {
+    editEditor.focus();
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(editSavedRange);
+    editSavedRange.deleteContents();
+    editSavedRange.insertNode(lineBreak);
+    editSavedRange.insertNode(img);
+    const newRange = document.createRange();
+    newRange.setStartAfter(lineBreak); newRange.collapse(true);
+    sel.removeAllRanges(); sel.addRange(newRange);
+    editSavedRange = newRange.cloneRange();
+  } else {
+    editEditor.appendChild(img);
+    editEditor.appendChild(lineBreak);
+    editEditor.focus();
+    const sel = window.getSelection();
+    const newRange = document.createRange();
+    newRange.setStartAfter(lineBreak); newRange.collapse(true);
+    sel.removeAllRanges(); sel.addRange(newRange);
+    editSavedRange = newRange.cloneRange();
+  }
+  input.value = '';
+}
+
+function showErrorEdit(msg) {
+  const el = document.getElementById('editError');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ── MỞ/ĐÓNG MODAL SỬA ──
+function openEditModal(id) {
+  const p = allProducts.find(x => x._id === id || String(x._id) === String(id));
+  if (!p) return;
+  currentEditId = id;
+  editPageReady = false;
+  editImageBytesMap = {};
+
+  document.getElementById('editForm').action = '/admin/products/' + id + '/edit';
+  document.getElementById('editName').value = p.name || '';
+  document.getElementById('editPrice').value = p.price || '';
+  document.getElementById('editLocation').value = p.location || '';
+  document.getElementById('editContact').value = p.contact || '';
+  document.getElementById('editCategory').value = p.category || 'canho';
+  document.getElementById('editDeleteVideo').value = 'no';
+  document.getElementById('editError').style.display = 'none';
+
+  // Ảnh hiện tại
+  const preview = document.getElementById('editImagesPreview');
+  preview.innerHTML = '';
+  (p.images || []).forEach(img => {
+    const url = typeof img === 'string' ? img : img.url;
+    const bytes = typeof img === 'object' ? img.bytes : 0;
+    editImageBytesMap[url] = bytes || 0;
+    const item = document.createElement('div');
+    item.className = 'image-preview-item';
+    item.innerHTML = '<img src="' + url + '" alt=""><button class="image-preview-delete" type="button" title="Xóa ảnh này" onclick="markDeleteImage(this, \'' + url + '\')">✕</button><input type="hidden" name="deleteImages" value="' + url + '" disabled>';
+    preview.appendChild(item);
+  });
+
+  // Video hiện tại
+  const videoInfo = document.getElementById('editVideoInfo');
+  if (p.video) {
+    videoInfo.innerHTML = '<video src="' + p.video + '" style="max-width:200px;border-radius:8px;margin-bottom:8px;" controls></video><br><button type="button" class="btn btn-danger btn-sm" onclick="markDeleteVideo(this)">🗑 Xóa video này</button>';
+  } else {
+    videoInfo.innerHTML = '<span style="color:var(--text3);font-size:13px;">Chưa có video</span>';
+  }
+
+  // Nội dung mô tả
+  editEditor.innerHTML = p.description || '';
+  cleanEditorContentEdit();
+  if (editEditor.innerHTML.replace(/<br\s*\/?>/gi,'').trim() === '') editEditor.innerHTML = '';
+  editEditor.querySelectorAll('img').forEach(img => {
+    img.classList.remove('img-selected');
+    if (!img.dataset.bound) { img.dataset.bound='1'; bindImageEventsEdit(img); }
+  });
+  editEditor.querySelectorAll('.img-resize-handle').forEach(h => h.remove());
+  editImgToolbar.style.display = 'none';
+  editSelectedImg = null;
+
+  document.getElementById('editModal').classList.add('active');
+  setTimeout(() => { editPageReady = true; }, 800);
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('active');
+  editEditor.innerHTML = '';
+  currentEditId = null;
+  editSelectedImg = null;
+  editImgToolbar.style.display = 'none';
+}
+
+function markDeleteImage(btn, url) {
+  const item = btn.parentNode;
+  const hiddenInput = item.querySelector('input[type="hidden"]');
+  if (item.style.opacity === '0.3') {
+    item.style.opacity = '1';
+    hiddenInput.disabled = true;
+    btn.style.background = 'var(--red)';
+  } else {
+    item.style.opacity = '0.3';
+    hiddenInput.disabled = false;
+    btn.style.background = '#888';
+  }
+}
+
+function markDeleteVideo(btn) {
+  document.getElementById('editDeleteVideo').value = 'yes';
+  btn.disabled = true;
+  btn.textContent = '✓ Sẽ xóa video khi lưu';
+  btn.style.opacity = '0.5';
+}
+
+function submitEdit() {
+  document.getElementById('editDescription').value = editEditor.innerHTML;
+  document.getElementById('editForm').submit();
+}
+
+// Đóng modal khi bấm ra ngoài
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+</script>
+
+</body>
+</html>

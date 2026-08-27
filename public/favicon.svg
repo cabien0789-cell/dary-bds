@@ -1,0 +1,39 @@
+<svg width="100%" viewBox="0 0 680 680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Logo Dary BDS</title>
+  <desc>Chữ D màu vàng với cây búa chéo nền đen</desc>
+  <rect width="680" height="680" fill="#111111"/>
+  <path d="
+    M 195,115
+    L 195,565
+    L 290,565
+    C 465,565 565,462 565,340
+    C 565,218 465,115 290,115
+    Z
+    M 258,182
+    L 290,182
+    C 422,182 495,252 495,340
+    C 495,428 422,498 290,498
+    L 258,498
+    Z
+  " fill="#C9922A"/>
+  <g transform="translate(350,335) rotate(-30)">
+    <path d="
+      M -230,-18
+      L 0,-18
+      L 0,-65
+      Q 0,-73 8,-73
+      L 62,-73
+      Q 70,-73 70,-65
+      L 70,65
+      Q 70,73 62,73
+      L 8,73
+      Q 0,73 0,65
+      L 0,18
+      L -230,18
+      Q -238,18 -238,10
+      L -238,-10
+      Q -238,-18 -230,-18
+      Z
+    " fill="#C9922A"/>
+  </g>
+</svg>
