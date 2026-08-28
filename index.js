@@ -161,29 +161,37 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
     const uploadedImages = [];
     if (req.files && req.files['images']) {
       for (const file of req.files['images']) {
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { resource_type: 'image', folder: 'dary-bds/images' },
-            (error, result) => { if (error) reject(error); else resolve(result); }
-          );
-          stream.end(file.buffer);
-        });
-        uploadedImages.push({ url: result.secure_url, bytes: result.bytes });
+        try {
+          const result = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { resource_type: 'image', folder: 'dary-bds/images' },
+              (error, result) => { if (error) reject(error); else resolve(result); }
+            );
+            stream.end(file.buffer);
+          });
+          uploadedImages.push({ url: result.secure_url, bytes: result.bytes });
+        } catch (imgErr) {
+          console.error('Image upload error:', imgErr.message);
+        }
       }
     }
 
     // Upload video lên Cloudinary
     let videoUrl = null;
     if (req.files && req.files['video'] && req.files['video'][0]) {
-      const videoFile = req.files['video'][0];
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'video', folder: 'dary-bds/videos' },
-          (error, result) => { if (error) reject(error); else resolve(result); }
-        );
-        stream.end(videoFile.buffer);
-      });
-      videoUrl = result.secure_url;
+      try {
+        const videoFile = req.files['video'][0];
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'video', folder: 'dary-bds/videos' },
+            (error, result) => { if (error) reject(error); else resolve(result); }
+          );
+          stream.end(videoFile.buffer);
+        });
+        videoUrl = result.secure_url;
+      } catch (vidErr) {
+        console.error('Video upload error:', vidErr.message);
+      }
     }
 
     await getProducts().insertOne({
@@ -201,8 +209,10 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
 
     res.redirect('/admin');
   } catch (e) {
-    console.error(e);
-    res.redirect('/admin');
+    console.error('CREATE ERROR:', e);
+    const products = await getProducts().find().sort({ createdAt: -1 }).toArray().catch(() => []);
+    const settings = await getSettings().findOne({ key: 'contact' }).catch(() => null);
+    res.render('admin', { products, settings: settings || {}, createError: e.message });
   }
 });
 

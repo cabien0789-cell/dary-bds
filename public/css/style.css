@@ -1151,7 +1151,6 @@ a:hover { color: var(--primary); }
 }
 
 @media (max-width: 480px) {
-  .header-contact-item span:not(.header-contact-icon) { display: none; }
   .hero-title { font-size: 24px; }
   .tab-btn { padding: 12px 14px; font-size: 13px; }
   .detail-images { grid-template-columns: 1fr; }
