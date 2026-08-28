@@ -1114,10 +1114,11 @@ a:hover { color: var(--primary); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .header-inner { padding: 0 16px; height: 60px; }
+  .header-inner { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
   .header-brand-name { font-size: 18px; }
-  .header-contact { gap: 12px; }
-  .header-contact-item { font-size: 13px; }
+  .header-contact { gap: 10px; flex-wrap: wrap; }
+  .header-contact-item { font-size: 12px; gap: 4px; }
+  .tabs-wrap { top: 0; }
 
   .hero { padding: 48px 16px 40px; }
   .hero-title { font-size: 28px; }
