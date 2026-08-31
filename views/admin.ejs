@@ -79,7 +79,10 @@
         </div>
         <div class="field-group">
           <label>Ảnh sản phẩm (có thể chọn nhiều ảnh)</label>
-          <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
+          <input type="file" name="images" id="createImagesInput" accept="image/png,image/jpeg,image/jpg" multiple onchange="previewCreateImages(this)">
+          <input type="hidden" name="avatarIndex" id="createAvatarIndex" value="0">
+          <p style="font-size:12px;color:var(--text3);margin-top:6px;">Bấm vào ảnh để chọn làm ảnh bìa (ảnh đầu tiên mặc định là ảnh bìa)</p>
+          <div id="createImagesPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;"></div>
         </div>
         <div class="field-group">
           <label>Video (không bắt buộc)</label>
@@ -139,7 +142,7 @@
         <% if (p.images && p.images.length > 0) { %>
           <img class="admin-product-img" src="<%= typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url %>" alt="<%= p.name %>">
         <% } else { %>
-          <div class="admin-product-img-placeholder">🏠</div>
+          <div class="admin-product-img-placeholder"><%= {canho:"🏢",nhao:"🏠",dat:"🌿"}[p.category] || "🏠" %></div>
         <% } %>
         <div class="admin-product-info">
           <div class="admin-product-name"><%= p.name %></div>
@@ -196,8 +199,9 @@
         <label>Thông tin liên hệ riêng</label>
         <input type="text" name="contact" id="editContact">
       </div>
+      <input type="hidden" name="avatarIndex" id="editAvatarIndex" value="0">
       <div class="field-group">
-        <label>Ảnh hiện tại</label>
+        <label>Ảnh hiện tại <span style="font-size:12px;color:var(--text3);font-weight:400;">(bấm vào ảnh để chọn làm ảnh bìa, bấm ✕ để xóa)</span></label>
         <div class="images-preview" id="editImagesPreview"></div>
       </div>
       <div class="field-group">
@@ -587,6 +591,38 @@ async function uploadImageCreate(input) {
 function showErrorCreate(msg) {
   const el = document.getElementById('createError');
   el.textContent = msg; el.style.display = 'block';
+}
+
+function previewCreateImages(input) {
+  const preview = document.getElementById('createImagesPreview');
+  preview.innerHTML = '';
+  document.getElementById('createAvatarIndex').value = '0';
+  const files = Array.from(input.files);
+  files.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const item = document.createElement('div');
+      item.style.cssText = 'position:relative;width:100px;height:80px;cursor:pointer;flex-shrink:0;';
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;border:' + (i===0?'2.5px solid var(--primary)':'2px solid var(--border)') + ';';
+      img.dataset.index = i;
+      const label = document.createElement('div');
+      label.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;text-align:center;padding:2px 0;border-radius:0 0 6px 6px;';
+      label.textContent = i===0?'✓ Ảnh bìa':'';
+      item.appendChild(img);
+      item.appendChild(label);
+      item.addEventListener('click', function() {
+        document.getElementById('createAvatarIndex').value = i;
+        preview.querySelectorAll('img').forEach((im, idx) => {
+          im.style.border = idx===i?'2.5px solid var(--primary)':'2px solid var(--border)';
+          im.nextElementSibling.textContent = idx===i?'✓ Ảnh bìa':'';
+        });
+      });
+      preview.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function submitCreate() {
@@ -986,13 +1022,52 @@ function openEditModal(id) {
   // Ảnh hiện tại
   const preview = document.getElementById('editImagesPreview');
   preview.innerHTML = '';
-  (p.images || []).forEach(img => {
+  const currentAvatar = p.avatarIndex || 0;
+  document.getElementById('editAvatarIndex').value = currentAvatar;
+  (p.images || []).forEach((img, i) => {
     const url = typeof img === 'string' ? img : img.url;
     const bytes = typeof img === 'object' ? img.bytes : 0;
     editImageBytesMap[url] = bytes || 0;
+    const isAvatar = i === currentAvatar;
     const item = document.createElement('div');
     item.className = 'image-preview-item';
-    item.innerHTML = '<img src="' + url + '" alt=""><button class="image-preview-delete" type="button" title="Xóa ảnh này" onclick="markDeleteImage(this, \'' + url + '\')">✕</button><input type="hidden" name="deleteImages" value="' + url + '" disabled>';
+    item.style.cursor = 'pointer';
+    item.dataset.imgIndex = i;
+    const imgEl = document.createElement('img');
+    imgEl.src = url;
+    imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;border:' + (isAvatar?'2.5px solid var(--primary)':'2px solid var(--border)') + ';display:block;';
+    const avatarLabel = document.createElement('div');
+    avatarLabel.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;text-align:center;padding:2px 0;border-radius:0 0 6px 6px;pointer-events:none;';
+    avatarLabel.textContent = isAvatar?'✓ Ảnh bìa':'';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'image-preview-delete';
+    delBtn.type = 'button';
+    delBtn.title = 'Xóa ảnh này';
+    delBtn.textContent = '✕';
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'deleteImages';
+    hiddenInput.value = url;
+    hiddenInput.disabled = true;
+    item.appendChild(imgEl);
+    item.appendChild(avatarLabel);
+    item.appendChild(delBtn);
+    item.appendChild(hiddenInput);
+    item.addEventListener('click', function(e) {
+      if (e.target === delBtn) return;
+      const idx = parseInt(this.dataset.imgIndex);
+      document.getElementById('editAvatarIndex').value = idx;
+      preview.querySelectorAll('.image-preview-item').forEach((it, ii) => {
+        const im = it.querySelector('img');
+        const lb = it.querySelector('div');
+        if (im) im.style.border = ii===idx?'2.5px solid var(--primary)':'2px solid var(--border)';
+        if (lb) lb.textContent = ii===idx?'✓ Ảnh bìa':'';
+      });
+    });
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      markDeleteImage(this, url);
+    });
     preview.appendChild(item);
   });
 
@@ -1029,7 +1104,7 @@ function closeEditModal() {
 }
 
 function markDeleteImage(btn, url) {
-  const item = btn.parentNode;
+  const item = btn.closest('.image-preview-item');
   const hiddenInput = item.querySelector('input[type="hidden"]');
   if (item.style.opacity === '0.3') {
     item.style.opacity = '1';
