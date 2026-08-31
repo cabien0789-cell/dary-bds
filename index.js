@@ -156,7 +156,6 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
 ]), async (req, res) => {
   try {
     const { name, price, location, contact, category, description } = req.body;
-    const avatarIndex = parseInt(req.body.avatarIndex) || 0;
 
     // Upload ảnh lên Cloudinary
     const uploadedImages = [];
@@ -203,7 +202,6 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       category: category || 'canho',
       description: description || '',
       images: uploadedImages,
-      avatarIndex: uploadedImages.length > 0 ? Math.min(avatarIndex, uploadedImages.length - 1) : 0,
       video: videoUrl,
       hidden: false,
       createdAt: new Date().toISOString()
@@ -212,7 +210,9 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
     res.redirect('/admin');
   } catch (e) {
     console.error('CREATE ERROR:', e);
-    res.redirect('/admin');
+    const products = await getProducts().find().sort({ createdAt: -1 }).toArray().catch(() => []);
+    const settings = await getSettings().findOne({ key: 'contact' }).catch(() => null);
+    res.render('admin', { products, settings: settings || {}, createError: e.message });
   }
 });
 
@@ -227,7 +227,6 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
     if (!product) return res.redirect('/admin');
 
     const { name, price, location, contact, category, description, deleteImages, deleteVideo } = req.body;
-    const avatarIndex = parseInt(req.body.avatarIndex) || 0;
 
     // Xóa ảnh được chọn xóa
     let currentImages = product.images || [];
@@ -248,18 +247,14 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
     // Upload ảnh mới
     if (req.files && req.files['images']) {
       for (const file of req.files['images']) {
-        try {
-          const result = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              { resource_type: 'image', folder: 'dary-bds/images' },
-              (error, result) => { if (error) reject(error); else resolve(result); }
-            );
-            stream.end(file.buffer);
-          });
-          currentImages.push({ url: result.secure_url, bytes: result.bytes });
-        } catch (imgErr) {
-          console.error('Image upload error:', imgErr.message);
-        }
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'image', folder: 'dary-bds/images' },
+            (error, result) => { if (error) reject(error); else resolve(result); }
+          );
+          stream.end(file.buffer);
+        });
+        currentImages.push({ url: result.secure_url, bytes: result.bytes });
       }
     }
 
@@ -270,20 +265,16 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
       videoUrl = null;
     }
     if (req.files && req.files['video'] && req.files['video'][0]) {
-      try {
-        await deleteCloudinaryVideo(product.video);
-        const videoFile = req.files['video'][0];
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { resource_type: 'video', folder: 'dary-bds/videos' },
-            (error, result) => { if (error) reject(error); else resolve(result); }
-          );
-          stream.end(videoFile.buffer);
-        });
-        videoUrl = result.secure_url;
-      } catch (vidErr) {
-        console.error('Video upload error:', vidErr.message);
-      }
+      await deleteCloudinaryVideo(product.video);
+      const videoFile = req.files['video'][0];
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'video', folder: 'dary-bds/videos' },
+          (error, result) => { if (error) reject(error); else resolve(result); }
+        );
+        stream.end(videoFile.buffer);
+      });
+      videoUrl = result.secure_url;
     }
 
     await getProducts().updateOne(
@@ -296,14 +287,13 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
         category: category || 'canho',
         description: description || '',
         images: currentImages,
-        avatarIndex: currentImages.length > 0 ? Math.min(avatarIndex, currentImages.length - 1) : 0,
         video: videoUrl
       }}
     );
 
     res.redirect('/admin');
   } catch (e) {
-    console.error('EDIT ERROR:', e);
+    console.error(e);
     res.redirect('/admin');
   }
 });
@@ -330,7 +320,7 @@ app.post('/admin/products/:id/upload-image', requireAdmin, upload.single('image'
     try { product = await getProducts().findOne({ _id: new ObjectId(req.params.id) }); } catch { return res.json({ error: 'Lỗi.' }); }
     if (!product) return res.json({ error: 'Không tìm thấy sản phẩm.' });
     if (!req.file) return res.json({ error: 'Không có file.' });
-    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(req.file.mimetype)) return res.json({ error: 'Chỉ chấp nhận png hoặc jpg/jpeg.' });
+    if (!['image/png', 'image/jpeg'].includes(req.file.mimetype)) return res.json({ error: 'Chỉ chấp nhận png hoặc jpg/jpeg.' });
 
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
