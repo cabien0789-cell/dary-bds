@@ -79,7 +79,9 @@
         </div>
         <div class="field-group">
           <label>Ảnh sản phẩm (có thể chọn nhiều ảnh)</label>
-          <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
+          <input type="file" name="images" id="createImagesInput" accept="image/png,image/jpeg,image/jpg" multiple onchange="previewCreateImages(this)">
+          <input type="hidden" name="avatarIndex" id="createAvatarIndex" value="0">
+          <div id="createImagesPreview" class="images-preview" style="margin-top:10px;"></div>
         </div>
         <div class="field-group">
           <label>Video (không bắt buộc)</label>
@@ -139,7 +141,7 @@
         <% if (p.images && p.images.length > 0) { %>
           <img class="admin-product-img" src="<%= typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url %>" alt="<%= p.name %>">
         <% } else { %>
-          <div class="admin-product-img-placeholder">🏠</div>
+          <div class="admin-product-img-placeholder"><%= {canho:'🏢',nhao:'🏠',dat:'🌿'}[p.category] || '🏠' %></div>
         <% } %>
         <div class="admin-product-info">
           <div class="admin-product-name"><%= p.name %></div>
@@ -589,6 +591,35 @@ function showErrorCreate(msg) {
   el.textContent = msg; el.style.display = 'block';
 }
 
+function previewCreateImages(input) {
+  const preview = document.getElementById('createImagesPreview');
+  preview.innerHTML = '';
+  document.getElementById('createAvatarIndex').value = '0';
+  const files = Array.from(input.files);
+  files.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const item = document.createElement('div');
+      item.className = 'image-preview-item';
+      item.style.cursor = 'pointer';
+      item.style.position = 'relative';
+      item.innerHTML = \`
+        <img src="\${e.target.result}" alt="Ảnh \${i+1}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid \${i===0?'var(--primary)':'var(--border)'};" id="createPreviewImg_\${i}">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:11px;text-align:center;padding:2px 0;border-radius:0 0 6px 6px;">\${i===0?'✓ Avatar':''}</div>
+      \`;
+      item.onclick = function() {
+        document.getElementById('createAvatarIndex').value = i;
+        document.querySelectorAll('[id^="createPreviewImg_"]').forEach((img, idx) => {
+          img.style.border = idx===i ? '2.5px solid var(--primary)' : '2px solid var(--border)';
+          img.nextElementSibling.textContent = idx===i ? '✓ Avatar' : '';
+        });
+      };
+      preview.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function submitCreate() {
   document.getElementById('createDescription').value = createEditor.innerHTML;
   document.getElementById('createForm').submit();
@@ -986,13 +1017,28 @@ function openEditModal(id) {
   // Ảnh hiện tại
   const preview = document.getElementById('editImagesPreview');
   preview.innerHTML = '';
-  (p.images || []).forEach(img => {
+  const currentAvatarIdx = p.avatarIndex || 0;
+  document.getElementById('editAvatarIndex').value = currentAvatarIdx;
+  (p.images || []).forEach((img, i) => {
     const url = typeof img === 'string' ? img : img.url;
     const bytes = typeof img === 'object' ? img.bytes : 0;
     editImageBytesMap[url] = bytes || 0;
+    const isAvatar = i === currentAvatarIdx;
     const item = document.createElement('div');
     item.className = 'image-preview-item';
-    item.innerHTML = '<img src="' + url + '" alt=""><button class="image-preview-delete" type="button" title="Xóa ảnh này" onclick="markDeleteImage(this, \'' + url + '\')">✕</button><input type="hidden" name="deleteImages" value="' + url + '" disabled>';
+    item.style.cursor = 'pointer';
+    item.style.position = 'relative';
+    item.dataset.index = i;
+    item.innerHTML = '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:' + (isAvatar ? '2.5px solid var(--primary)' : '2px solid var(--border)') + ';" class="edit-preview-img" data-index="' + i + '"><div class="edit-avatar-label" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:11px;text-align:center;padding:2px 0;border-radius:0 0 6px 6px;">' + (isAvatar ? '✓ Avatar' : '') + '</div><button class="image-preview-delete" type="button" title="Xóa ảnh này" onclick="markDeleteImage(this, \'' + url + '\')">✕</button><input type="hidden" name="deleteImages" value="' + url + '" disabled>';
+    item.querySelector('.edit-preview-img').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const idx = parseInt(this.dataset.index);
+      document.getElementById('editAvatarIndex').value = idx;
+      document.querySelectorAll('.edit-preview-img').forEach((img2, idx2) => {
+        img2.style.border = idx2 === idx ? '2.5px solid var(--primary)' : '2px solid var(--border)';
+        img2.nextElementSibling.textContent = idx2 === idx ? '✓ Avatar' : '';
+      });
+    });
     preview.appendChild(item);
   });
 

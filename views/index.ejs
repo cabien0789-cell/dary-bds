@@ -77,7 +77,7 @@
         <% canho.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
             <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+              <img class="product-card-img" src="<%= (p.images[p.avatarIndex || 0] || p.images[0]).url %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🏢</div>
             <% } %>
@@ -107,7 +107,7 @@
         <% nhao.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
             <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+              <img class="product-card-img" src="<%= (p.images[p.avatarIndex || 0] || p.images[0]).url %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🏠</div>
             <% } %>
@@ -137,7 +137,7 @@
         <% dat.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
             <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+              <img class="product-card-img" src="<%= (p.images[p.avatarIndex || 0] || p.images[0]).url %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🌿</div>
             <% } %>

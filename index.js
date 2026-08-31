@@ -161,39 +161,32 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
     const uploadedImages = [];
     if (req.files && req.files['images']) {
       for (const file of req.files['images']) {
-        try {
-          const result = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-              { resource_type: 'image', folder: 'dary-bds/images' },
-              (error, result) => { if (error) reject(error); else resolve(result); }
-            );
-            stream.end(file.buffer);
-          });
-          uploadedImages.push({ url: result.secure_url, bytes: result.bytes });
-        } catch (imgErr) {
-          console.error('Image upload error:', imgErr.message);
-        }
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'image', folder: 'dary-bds/images' },
+            (error, result) => { if (error) reject(error); else resolve(result); }
+          );
+          stream.end(file.buffer);
+        });
+        uploadedImages.push({ url: result.secure_url, bytes: result.bytes });
       }
     }
 
     // Upload video lên Cloudinary
     let videoUrl = null;
     if (req.files && req.files['video'] && req.files['video'][0]) {
-      try {
-        const videoFile = req.files['video'][0];
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { resource_type: 'video', folder: 'dary-bds/videos' },
-            (error, result) => { if (error) reject(error); else resolve(result); }
-          );
-          stream.end(videoFile.buffer);
-        });
-        videoUrl = result.secure_url;
-      } catch (vidErr) {
-        console.error('Video upload error:', vidErr.message);
-      }
+      const videoFile = req.files['video'][0];
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'video', folder: 'dary-bds/videos' },
+          (error, result) => { if (error) reject(error); else resolve(result); }
+        );
+        stream.end(videoFile.buffer);
+      });
+      videoUrl = result.secure_url;
     }
 
+    const avatarIndex = parseInt(req.body.avatarIndex) || 0;
     await getProducts().insertOne({
       name: name || '',
       price: price || '',
@@ -202,6 +195,7 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       category: category || 'canho',
       description: description || '',
       images: uploadedImages,
+      avatarIndex: uploadedImages.length > 0 ? Math.min(avatarIndex, uploadedImages.length - 1) : 0,
       video: videoUrl,
       hidden: false,
       createdAt: new Date().toISOString()
@@ -209,10 +203,8 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
 
     res.redirect('/admin');
   } catch (e) {
-    console.error('CREATE ERROR:', e);
-    const products = await getProducts().find().sort({ createdAt: -1 }).toArray().catch(() => []);
-    const settings = await getSettings().findOne({ key: 'contact' }).catch(() => null);
-    res.render('admin', { products, settings: settings || {}, createError: e.message });
+    console.error(e);
+    res.redirect('/admin');
   }
 });
 
@@ -277,6 +269,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
       videoUrl = result.secure_url;
     }
 
+    const avatarIndexEdit = parseInt(req.body.avatarIndex) || 0;
     await getProducts().updateOne(
       { _id: new ObjectId(req.params.id) },
       { $set: {
@@ -287,6 +280,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
         category: category || 'canho',
         description: description || '',
         images: currentImages,
+        avatarIndex: currentImages.length > 0 ? Math.min(avatarIndexEdit, currentImages.length - 1) : 0,
         video: videoUrl
       }}
     );
