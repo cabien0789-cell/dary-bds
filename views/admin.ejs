@@ -6,6 +6,105 @@
   <title>Quản trị - Dary BDS</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* ── UPLOAD ẢNH MỚI ── */
+    .upload-zone {
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg);
+      position: relative;
+    }
+    .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-zone-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-zone-text { font-size: 14px; color: var(--text2); font-weight: 600; }
+    .upload-zone-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+    /* ── PREVIEW LƯỚI ẢNH ── */
+    .img-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .img-preview-item {
+      position: relative;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 2.5px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg);
+      aspect-ratio: 4/3;
+    }
+    .img-preview-item img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .img-preview-item.is-avatar {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(200,151,58,0.25);
+    }
+    .img-preview-badge {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--primary); color: white;
+      font-size: 10px; font-weight: 800;
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: 0.3px;
+      display: none;
+    }
+    .img-preview-item.is-avatar .img-preview-badge { display: block; }
+    .img-preview-remove {
+      position: absolute; top: 6px; right: 6px;
+      width: 24px; height: 24px;
+      background: rgba(192,57,43,0.88); color: white;
+      border: none; border-radius: 50%;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      line-height: 1; transition: var(--transition);
+    }
+    .img-preview-remove:hover { background: var(--red); }
+    .img-preview-hint {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.55); color: white;
+      font-size: 10px; text-align: center; padding: 4px;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .img-preview-item:hover .img-preview-hint { opacity: 1; }
+
+    /* ── VIDEO PREVIEW ── */
+    .video-preview-wrap {
+      margin-top: 12px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .video-preview-wrap video {
+      width: 160px; border-radius: 6px; flex-shrink: 0;
+    }
+    .video-preview-info { flex: 1; }
+    .video-preview-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; word-break: break-all; }
+    .video-preview-size { font-size: 12px; color: var(--text3); }
+    .video-preview-remove {
+      background: var(--red-bg); border: 1.5px solid var(--red-border); color: var(--red);
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: var(--transition); white-space: nowrap;
+    }
+    .video-preview-remove:hover { background: var(--red); color: white; border-color: var(--red); }
+
+    /* Ảnh xóa trong form sửa */
+    .img-preview-item.marked-delete { opacity: 0.3; }
+    .img-preview-item.marked-delete .img-preview-badge { display: none !important; }
+  </style>
 </head>
 <body>
 
@@ -77,14 +176,32 @@
           <label>Thông tin liên hệ riêng (không bắt buộc)</label>
           <input type="text" name="contact" placeholder="Ví dụ: 0901234567">
         </div>
+
+        <!-- ẢNH SẢN PHẨM -->
         <div class="field-group">
-          <label>Ảnh sản phẩm (có thể chọn nhiều ảnh)</label>
-          <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
+          <label>Ảnh sản phẩm — bấm vào ảnh để chọn làm ảnh đại diện (viền vàng)</label>
+          <div class="upload-zone" id="createImgZone">
+            <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple id="createImgInput" onchange="handleCreateImages(this)">
+            <div class="upload-zone-icon">🖼️</div>
+            <div class="upload-zone-text">Bấm để chọn ảnh</div>
+            <div class="upload-zone-sub">PNG, JPG — có thể chọn nhiều ảnh</div>
+          </div>
+          <div class="img-preview-grid" id="createImgPreview"></div>
+          <input type="hidden" name="avatarIndex" id="createAvatarIndex" value="0">
         </div>
+
+        <!-- VIDEO -->
         <div class="field-group">
           <label>Video (không bắt buộc)</label>
-          <input type="file" name="video" accept="video/mp4">
+          <div class="upload-zone" id="createVideoZone">
+            <input type="file" name="video" accept="video/mp4" id="createVideoInput" onchange="handleCreateVideo(this)">
+            <div class="upload-zone-icon">🎬</div>
+            <div class="upload-zone-text">Bấm để chọn video</div>
+            <div class="upload-zone-sub">Định dạng MP4</div>
+          </div>
+          <div id="createVideoPreview"></div>
         </div>
+
         <div class="field-group">
           <label>Mô tả chi tiết</label>
           <input type="hidden" name="description" id="createDescription">
@@ -139,7 +256,7 @@
         <% if (p.images && p.images.length > 0) { %>
           <img class="admin-product-img" src="<%= typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url %>" alt="<%= p.name %>">
         <% } else { %>
-          <div class="admin-product-img-placeholder">🏠</div>
+          <div class="admin-product-img-placeholder"><%= { canho: '🏢', nhao: '🏠', dat: '🌿' }[p.category] || '🏠' %></div>
         <% } %>
         <div class="admin-product-info">
           <div class="admin-product-name"><%= p.name %></div>
@@ -196,23 +313,46 @@
         <label>Thông tin liên hệ riêng</label>
         <input type="text" name="contact" id="editContact">
       </div>
-      <div class="field-group">
-        <label>Ảnh hiện tại</label>
-        <div class="images-preview" id="editImagesPreview"></div>
-      </div>
-      <div class="field-group">
-        <label>Thêm ảnh mới</label>
-        <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple>
-      </div>
-      <div class="field-group" id="editVideoWrap">
+
+      <!-- VIDEO HIỆN TẠI — hiện trước -->
+      <div class="field-group" id="editVideoCurrentWrap">
         <label>Video hiện tại</label>
-        <div id="editVideoInfo"></div>
+        <div id="editVideoCurrentInfo"></div>
         <input type="hidden" name="deleteVideo" id="editDeleteVideo" value="no">
       </div>
+
+      <!-- THAY VIDEO MỚI -->
       <div class="field-group">
-        <label>Thay video mới</label>
-        <input type="file" name="video" accept="video/mp4">
+        <label>Thay video mới (không bắt buộc)</label>
+        <div class="upload-zone">
+          <input type="file" name="video" accept="video/mp4" id="editVideoNewInput" onchange="handleEditVideoNew(this)">
+          <div class="upload-zone-icon">🎬</div>
+          <div class="upload-zone-text">Bấm để chọn video mới</div>
+          <div class="upload-zone-sub">Định dạng MP4</div>
+        </div>
+        <div id="editVideoNewPreview"></div>
       </div>
+
+      <!-- ẢNH HIỆN TẠI -->
+      <div class="field-group">
+        <label>Ảnh hiện tại — bấm vào ảnh để chọn làm ảnh đại diện, bấm ✕ để xóa ảnh đó</label>
+        <div class="img-preview-grid" id="editExistingImgGrid"></div>
+        <input type="hidden" name="avatarUrl" id="editAvatarUrl" value="">
+      </div>
+
+      <!-- THÊM ẢNH MỚI -->
+      <div class="field-group">
+        <label>Thêm ảnh mới</label>
+        <div class="upload-zone" id="editImgZone">
+          <input type="file" name="images" accept="image/png,image/jpeg,image/jpg" multiple id="editImgNewInput" onchange="handleEditImagesNew(this)">
+          <div class="upload-zone-icon">🖼️</div>
+          <div class="upload-zone-text">Bấm để thêm ảnh mới</div>
+          <div class="upload-zone-sub">PNG, JPG — có thể chọn nhiều ảnh</div>
+        </div>
+        <div class="img-preview-grid" id="editNewImgPreview"></div>
+        <input type="hidden" name="avatarNewIndex" id="editAvatarNewIndex" value="">
+      </div>
+
       <div class="field-group">
         <label>Mô tả chi tiết</label>
         <input type="hidden" name="description" id="editDescription">
@@ -263,6 +403,358 @@
 const allProducts = <%- JSON.stringify(products) %>;
 
 // ═══════════════════════════════════════════════════
+// ── UPLOAD ẢNH/VIDEO FORM THÊM MỚI (CREATE) ──
+// ═══════════════════════════════════════════════════
+let createImageFiles = []; // mảng {file, objectUrl} theo thứ tự
+let createAvatarIdx = 0;   // index trong createImageFiles được chọn làm avatar
+
+function handleCreateImages(input) {
+  const newFiles = Array.from(input.files);
+  if (newFiles.length === 0) return;
+  newFiles.forEach(file => {
+    createImageFiles.push({ file, objectUrl: URL.createObjectURL(file) });
+  });
+  // Reset input để có thể chọn lại cùng file nếu cần
+  input.value = '';
+  renderCreateImgPreview();
+}
+
+function renderCreateImgPreview() {
+  const grid = document.getElementById('createImgPreview');
+  grid.innerHTML = '';
+  createImageFiles.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'img-preview-item' + (idx === createAvatarIdx ? ' is-avatar' : '');
+    div.title = 'Bấm để chọn làm ảnh đại diện';
+    div.innerHTML =
+      '<img src="' + item.objectUrl + '" alt="">' +
+      '<div class="img-preview-badge">ĐẠI DIỆN</div>' +
+      '<button type="button" class="img-preview-remove" title="Xóa ảnh này">✕</button>' +
+      '<div class="img-preview-hint">Bấm để chọn làm đại diện</div>';
+    // Chọn làm avatar khi bấm vào ảnh
+    div.addEventListener('click', function(e) {
+      if (e.target.classList.contains('img-preview-remove')) return;
+      createAvatarIdx = idx;
+      document.getElementById('createAvatarIndex').value = idx;
+      renderCreateImgPreview();
+    });
+    // Xóa ảnh
+    div.querySelector('.img-preview-remove').addEventListener('click', function(e) {
+      e.stopPropagation();
+      URL.revokeObjectURL(item.objectUrl);
+      createImageFiles.splice(idx, 1);
+      if (createAvatarIdx >= createImageFiles.length) createAvatarIdx = 0;
+      if (createAvatarIdx > idx) createAvatarIdx--;
+      document.getElementById('createAvatarIndex').value = createAvatarIdx;
+      renderCreateImgPreview();
+      rebuildCreateFileInput();
+    });
+    grid.appendChild(div);
+  });
+  document.getElementById('createAvatarIndex').value = createAvatarIdx;
+}
+
+function rebuildCreateFileInput() {
+  // Tạo lại DataTransfer để gán file list mới cho input
+  const dt = new DataTransfer();
+  createImageFiles.forEach(item => dt.items.add(item.file));
+  document.getElementById('createImgInput').files = dt.files;
+}
+
+// Video — CREATE
+function handleCreateVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const wrap = document.getElementById('createVideoPreview');
+  wrap.innerHTML =
+    '<div class="video-preview-wrap">' +
+      '<video src="' + url + '" controls></video>' +
+      '<div class="video-preview-info">' +
+        '<div class="video-preview-name">' + file.name + '</div>' +
+        '<div class="video-preview-size">' + (file.size / 1024 / 1024).toFixed(1) + ' MB</div>' +
+      '</div>' +
+      '<button type="button" class="video-preview-remove" onclick="removeCreateVideo()">✕ Bỏ video</button>' +
+    '</div>';
+}
+
+function removeCreateVideo() {
+  document.getElementById('createVideoInput').value = '';
+  document.getElementById('createVideoPreview').innerHTML = '';
+}
+
+// Submit CREATE — rebuild file input với đúng thứ tự avatar trước
+function submitCreate() {
+  if (createImageFiles.length > 0) {
+    // Sắp xếp: avatar index lên đầu
+    const reordered = [...createImageFiles];
+    if (createAvatarIdx > 0) {
+      const avatarItem = reordered.splice(createAvatarIdx, 1)[0];
+      reordered.unshift(avatarItem);
+    }
+    const dt = new DataTransfer();
+    reordered.forEach(item => dt.items.add(item.file));
+    document.getElementById('createImgInput').files = dt.files;
+    // Avatar index sau khi sắp xếp luôn là 0
+    document.getElementById('createAvatarIndex').value = '0';
+  }
+  document.getElementById('createDescription').value = createEditor.innerHTML;
+  document.getElementById('createForm').submit();
+}
+
+// ═══════════════════════════════════════════════════
+// ── UPLOAD ẢNH/VIDEO FORM SỬA (EDIT) ──
+// ═══════════════════════════════════════════════════
+let editNewImageFiles = []; // ảnh mới thêm trong form sửa
+let editAvatarSource = null; // 'existing' hoặc 'new'
+let editAvatarExistingUrl = ''; // URL ảnh cũ được chọn làm avatar
+let editAvatarNewIdx = -1;    // index trong editNewImageFiles được chọn làm avatar
+
+function renderEditExistingImages(images, avatarUrl) {
+  const grid = document.getElementById('editExistingImgGrid');
+  grid.innerHTML = '';
+  images.forEach((img, idx) => {
+    const url = typeof img === 'string' ? img : img.url;
+    const isAvatar = (url === avatarUrl);
+    const div = document.createElement('div');
+    div.className = 'img-preview-item' + (isAvatar ? ' is-avatar' : '');
+    div.dataset.url = url;
+    div.title = 'Bấm để chọn làm ảnh đại diện';
+    div.innerHTML =
+      '<img src="' + url + '" alt="">' +
+      '<div class="img-preview-badge">ĐẠI DIỆN</div>' +
+      '<button type="button" class="img-preview-remove" title="Xóa ảnh này">✕</button>' +
+      '<div class="img-preview-hint">Bấm để chọn làm đại diện</div>' +
+      '<input type="hidden" name="deleteImages" value="' + url + '" disabled>';
+    // Chọn làm avatar
+    div.addEventListener('click', function(e) {
+      if (e.target.classList.contains('img-preview-remove')) return;
+      if (div.classList.contains('marked-delete')) return;
+      // Bỏ avatar khỏi tất cả ảnh cũ
+      grid.querySelectorAll('.img-preview-item').forEach(el => el.classList.remove('is-avatar'));
+      // Bỏ avatar khỏi ảnh mới
+      document.getElementById('editNewImgPreview').querySelectorAll('.img-preview-item').forEach(el => el.classList.remove('is-avatar'));
+      div.classList.add('is-avatar');
+      editAvatarSource = 'existing';
+      editAvatarExistingUrl = url;
+      editAvatarNewIdx = -1;
+      document.getElementById('editAvatarUrl').value = url;
+      document.getElementById('editAvatarNewIndex').value = '';
+    });
+    // Đánh dấu xóa
+    div.querySelector('.img-preview-remove').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isMarked = div.classList.contains('marked-delete');
+      if (isMarked) {
+        // Bỏ đánh dấu xóa
+        div.classList.remove('marked-delete');
+        div.querySelector('input[type="hidden"]').disabled = true;
+        div.querySelector('.img-preview-remove').textContent = '✕';
+      } else {
+        // Đánh dấu xóa
+        div.classList.add('marked-delete');
+        div.classList.remove('is-avatar');
+        div.querySelector('input[type="hidden"]').disabled = false;
+        div.querySelector('.img-preview-remove').textContent = '↩';
+        // Nếu ảnh này đang là avatar thì reset avatar
+        if (editAvatarExistingUrl === url) {
+          editAvatarExistingUrl = '';
+          document.getElementById('editAvatarUrl').value = '';
+        }
+      }
+    });
+    grid.appendChild(div);
+  });
+}
+
+function handleEditImagesNew(input) {
+  const newFiles = Array.from(input.files);
+  if (newFiles.length === 0) return;
+  newFiles.forEach(file => {
+    editNewImageFiles.push({ file, objectUrl: URL.createObjectURL(file) });
+  });
+  input.value = '';
+  renderEditNewImgPreview();
+}
+
+function renderEditNewImgPreview() {
+  const grid = document.getElementById('editNewImgPreview');
+  grid.innerHTML = '';
+  editNewImageFiles.forEach((item, idx) => {
+    const isAvatar = (editAvatarSource === 'new' && idx === editAvatarNewIdx);
+    const div = document.createElement('div');
+    div.className = 'img-preview-item' + (isAvatar ? ' is-avatar' : '');
+    div.title = 'Bấm để chọn làm ảnh đại diện';
+    div.innerHTML =
+      '<img src="' + item.objectUrl + '" alt="">' +
+      '<div class="img-preview-badge">ĐẠI DIỆN</div>' +
+      '<button type="button" class="img-preview-remove" title="Xóa">✕</button>' +
+      '<div class="img-preview-hint">Bấm để chọn làm đại diện</div>';
+    div.addEventListener('click', function(e) {
+      if (e.target.classList.contains('img-preview-remove')) return;
+      // Bỏ avatar khỏi ảnh cũ
+      document.getElementById('editExistingImgGrid').querySelectorAll('.img-preview-item').forEach(el => el.classList.remove('is-avatar'));
+      // Bỏ avatar khỏi ảnh mới
+      grid.querySelectorAll('.img-preview-item').forEach(el => el.classList.remove('is-avatar'));
+      div.classList.add('is-avatar');
+      editAvatarSource = 'new';
+      editAvatarNewIdx = idx;
+      editAvatarExistingUrl = '';
+      document.getElementById('editAvatarNewIndex').value = idx;
+      document.getElementById('editAvatarUrl').value = '';
+    });
+    div.querySelector('.img-preview-remove').addEventListener('click', function(e) {
+      e.stopPropagation();
+      URL.revokeObjectURL(item.objectUrl);
+      editNewImageFiles.splice(idx, 1);
+      if (editAvatarSource === 'new') {
+        if (editAvatarNewIdx === idx) { editAvatarNewIdx = -1; editAvatarSource = null; document.getElementById('editAvatarNewIndex').value = ''; }
+        else if (editAvatarNewIdx > idx) { editAvatarNewIdx--; document.getElementById('editAvatarNewIndex').value = editAvatarNewIdx; }
+      }
+      renderEditNewImgPreview();
+      rebuildEditFileInput();
+    });
+    grid.appendChild(div);
+  });
+}
+
+function rebuildEditFileInput() {
+  const dt = new DataTransfer();
+  editNewImageFiles.forEach(item => dt.items.add(item.file));
+  document.getElementById('editImgNewInput').files = dt.files;
+}
+
+// Video hiện tại — EDIT
+function renderEditCurrentVideo(videoUrl) {
+  const wrap = document.getElementById('editVideoCurrentInfo');
+  if (videoUrl) {
+    wrap.innerHTML =
+      '<div class="video-preview-wrap">' +
+        '<video src="' + videoUrl + '" controls></video>' +
+        '<div class="video-preview-info"><div class="video-preview-name">Video hiện tại</div></div>' +
+        '<button type="button" class="video-preview-remove" onclick="markEditDeleteVideo(this)">🗑 Xóa video này</button>' +
+      '</div>';
+  } else {
+    wrap.innerHTML = '<span style="color:var(--text3);font-size:13px;">Chưa có video</span>';
+  }
+}
+
+function markEditDeleteVideo(btn) {
+  document.getElementById('editDeleteVideo').value = 'yes';
+  btn.disabled = true;
+  btn.textContent = '✓ Sẽ xóa video khi lưu';
+  btn.style.opacity = '0.5';
+}
+
+// Video mới — EDIT
+function handleEditVideoNew(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const wrap = document.getElementById('editVideoNewPreview');
+  wrap.innerHTML =
+    '<div class="video-preview-wrap">' +
+      '<video src="' + url + '" controls></video>' +
+      '<div class="video-preview-info">' +
+        '<div class="video-preview-name">' + file.name + '</div>' +
+        '<div class="video-preview-size">' + (file.size / 1024 / 1024).toFixed(1) + ' MB</div>' +
+      '</div>' +
+      '<button type="button" class="video-preview-remove" onclick="removeEditVideoNew()">✕ Bỏ</button>' +
+    '</div>';
+}
+
+function removeEditVideoNew() {
+  document.getElementById('editVideoNewInput').value = '';
+  document.getElementById('editVideoNewPreview').innerHTML = '';
+}
+
+// ── MỞ/ĐÓNG MODAL SỬA ──
+function openEditModal(id) {
+  const p = allProducts.find(x => x._id === id || String(x._id) === String(id));
+  if (!p) return;
+
+  // Reset trạng thái
+  editNewImageFiles = [];
+  editAvatarSource = null;
+  editAvatarExistingUrl = '';
+  editAvatarNewIdx = -1;
+  currentEditId = id;
+  editPageReady = false;
+  editImageBytesMap = {};
+
+  document.getElementById('editForm').action = '/admin/products/' + id + '/edit';
+  document.getElementById('editName').value = p.name || '';
+  document.getElementById('editPrice').value = p.price || '';
+  document.getElementById('editLocation').value = p.location || '';
+  document.getElementById('editContact').value = p.contact || '';
+  document.getElementById('editCategory').value = p.category || 'canho';
+  document.getElementById('editDeleteVideo').value = 'no';
+  document.getElementById('editAvatarUrl').value = '';
+  document.getElementById('editAvatarNewIndex').value = '';
+  document.getElementById('editError').style.display = 'none';
+  document.getElementById('editNewImgPreview').innerHTML = '';
+  document.getElementById('editVideoNewPreview').innerHTML = '';
+
+  // Ảnh hiện tại — ảnh đầu tiên là avatar mặc định
+  const images = p.images || [];
+  const defaultAvatarUrl = images.length > 0 ? (typeof images[0] === 'string' ? images[0] : images[0].url) : '';
+  editAvatarExistingUrl = defaultAvatarUrl;
+  document.getElementById('editAvatarUrl').value = defaultAvatarUrl;
+  renderEditExistingImages(images, defaultAvatarUrl);
+
+  // Video hiện tại
+  renderEditCurrentVideo(p.video || null);
+
+  // Nội dung mô tả
+  editEditor.innerHTML = p.description || '';
+  cleanEditorContentEdit();
+  if (editEditor.innerHTML.replace(/<br\s*\/?>/gi,'').trim() === '') editEditor.innerHTML = '';
+  editEditor.querySelectorAll('img').forEach(img => {
+    img.classList.remove('img-selected');
+    if (!img.dataset.bound) { img.dataset.bound='1'; bindImageEventsEdit(img); }
+  });
+  editEditor.querySelectorAll('.img-resize-handle').forEach(h => h.remove());
+  editImgToolbar.style.display = 'none';
+  editSelectedImg = null;
+
+  document.getElementById('editModal').classList.add('active');
+  setTimeout(() => { editPageReady = true; }, 800);
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('active');
+  editEditor.innerHTML = '';
+  currentEditId = null;
+  editSelectedImg = null;
+  editImgToolbar.style.display = 'none';
+  editNewImageFiles = [];
+}
+
+function submitEdit() {
+  // Rebuild file input với đúng thứ tự
+  if (editNewImageFiles.length > 0) {
+    const reordered = [...editNewImageFiles];
+    // Nếu avatar là ảnh mới, đưa nó lên đầu mảng ảnh mới
+    // (server sẽ xử lý: nếu avatarNewIndex = 0 sau reorder, và không có avatarUrl, thì ảnh mới đầu tiên sẽ lên avatar)
+    if (editAvatarSource === 'new' && editAvatarNewIdx > 0) {
+      const avatarItem = reordered.splice(editAvatarNewIdx, 1)[0];
+      reordered.unshift(avatarItem);
+      document.getElementById('editAvatarNewIndex').value = '0';
+    }
+    const dt = new DataTransfer();
+    reordered.forEach(item => dt.items.add(item.file));
+    document.getElementById('editImgNewInput').files = dt.files;
+  }
+  document.getElementById('editDescription').value = editEditor.innerHTML;
+  document.getElementById('editForm').submit();
+}
+
+// Đóng modal khi bấm ra ngoài
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+
+// ═══════════════════════════════════════════════════
 // ── RICH TEXT EDITOR — THÊM SẢN PHẨM (CREATE) ──
 // ═══════════════════════════════════════════════════
 const createEditor = document.getElementById('createEditor');
@@ -272,7 +764,6 @@ let createSelectedImg = null;
 let createImageBytesMap = {};
 let createPageReady = false;
 
-// Lưu vị trí con trỏ — CREATE
 createEditor.addEventListener('mouseup', () => saveRangeCreate());
 createEditor.addEventListener('keyup', () => saveRangeCreate());
 createEditor.addEventListener('focus', () => saveRangeCreate());
@@ -284,7 +775,6 @@ function saveRangeCreate() {
 
 function resetEditorCleanCreate() { createEditor.innerHTML = ''; }
 
-// Cỡ chữ — CREATE
 function setFontSizeCreate(px) {
   createEditor.focus();
   const sel = window.getSelection();
@@ -319,7 +809,6 @@ function setFontSizeCreate(px) {
   }
 }
 
-// Tab — CREATE
 createEditor.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && createSelectedImg) {
     e.preventDefault();
@@ -339,7 +828,6 @@ createEditor.addEventListener('keydown', e => {
   }
 });
 
-// Reset khi xóa toàn bộ mobile — CREATE
 createEditor.addEventListener('input', e => {
   const text = createEditor.innerText.replace(/\u200b/g, '').trim();
   if (text === '') {
@@ -349,7 +837,6 @@ createEditor.addEventListener('input', e => {
   }
 });
 
-// Paste — CREATE
 createEditor.addEventListener('paste', e => {
   e.preventDefault();
   const clipboardData = e.clipboardData || window.clipboardData;
@@ -433,7 +920,6 @@ createEditor.addEventListener('paste', e => {
   }
 });
 
-// Mutation Observer — CREATE
 let createSnapshotBeforeInput = null;
 createEditor.addEventListener('beforeinput', e => {
   if (['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) {
@@ -487,7 +973,6 @@ createEditor.addEventListener('input', e => {
   createSnapshotBeforeInput = null;
 }, true);
 
-// Ảnh — CREATE
 function bindImageEventsCreate(img) {
   img.addEventListener('click', e => { e.stopPropagation(); selectImgCreate(img); });
 }
@@ -572,7 +1057,6 @@ function startResizeTouchCreate(e, img) {
 
 setTimeout(() => { createPageReady = true; }, 800);
 
-// Upload ảnh vào mô tả — CREATE (cần tạo sản phẩm trước rồi mới upload được)
 async function uploadImageCreate(input) {
   const file = input.files[0];
   if (!file) return;
@@ -587,11 +1071,6 @@ async function uploadImageCreate(input) {
 function showErrorCreate(msg) {
   const el = document.getElementById('createError');
   el.textContent = msg; el.style.display = 'block';
-}
-
-function submitCreate() {
-  document.getElementById('createDescription').value = createEditor.innerHTML;
-  document.getElementById('createForm').submit();
 }
 
 // ═══════════════════════════════════════════════════
@@ -654,7 +1133,6 @@ function cleanEditorContentEdit() {
   });
 }
 
-// Cỡ chữ — EDIT
 function setFontSizeEdit(px) {
   editEditor.focus();
   const sel = window.getSelection();
@@ -683,7 +1161,6 @@ function setFontSizeEdit(px) {
   }
 }
 
-// Tab — EDIT
 editEditor.addEventListener('keydown', e => {
   if ((e.key === 'Delete' || e.key === 'Backspace') && editSelectedImg) {
     e.preventDefault(); deleteSelectedImgEdit(); return;
@@ -707,7 +1184,6 @@ editEditor.addEventListener('input', e => {
   }
 });
 
-// Paste — EDIT
 editEditor.addEventListener('paste', e => {
   e.preventDefault();
   const clipboardData = e.clipboardData || window.clipboardData;
@@ -780,7 +1256,6 @@ editEditor.addEventListener('paste', e => {
   }
 });
 
-// Mutation Observer — EDIT
 let editSnapshotBeforeInput = null;
 editEditor.addEventListener('beforeinput', e => {
   if (['deleteContentBackward','deleteContentForward','deleteByCut'].includes(e.inputType)) {
@@ -834,7 +1309,6 @@ editEditor.addEventListener('input', e => {
   editSnapshotBeforeInput = null;
 }, true);
 
-// Ảnh — EDIT
 function bindImageEventsEdit(img) {
   img.addEventListener('click', e => { e.stopPropagation(); selectImgEdit(img); });
 }
@@ -914,7 +1388,6 @@ function startResizeTouchEdit(e, img) {
   document.addEventListener('touchend', onTouchEnd);
 }
 
-// Upload ảnh vào mô tả — EDIT
 async function uploadImageEdit(input) {
   const file = input.files[0];
   if (!file) return;
@@ -965,99 +1438,6 @@ function showErrorEdit(msg) {
   const el = document.getElementById('editError');
   el.textContent = msg; el.style.display = 'block';
 }
-
-// ── MỞ/ĐÓNG MODAL SỬA ──
-function openEditModal(id) {
-  const p = allProducts.find(x => x._id === id || String(x._id) === String(id));
-  if (!p) return;
-  currentEditId = id;
-  editPageReady = false;
-  editImageBytesMap = {};
-
-  document.getElementById('editForm').action = '/admin/products/' + id + '/edit';
-  document.getElementById('editName').value = p.name || '';
-  document.getElementById('editPrice').value = p.price || '';
-  document.getElementById('editLocation').value = p.location || '';
-  document.getElementById('editContact').value = p.contact || '';
-  document.getElementById('editCategory').value = p.category || 'canho';
-  document.getElementById('editDeleteVideo').value = 'no';
-  document.getElementById('editError').style.display = 'none';
-
-  // Ảnh hiện tại
-  const preview = document.getElementById('editImagesPreview');
-  preview.innerHTML = '';
-  (p.images || []).forEach(img => {
-    const url = typeof img === 'string' ? img : img.url;
-    const bytes = typeof img === 'object' ? img.bytes : 0;
-    editImageBytesMap[url] = bytes || 0;
-    const item = document.createElement('div');
-    item.className = 'image-preview-item';
-    item.innerHTML = '<img src="' + url + '" alt=""><button class="image-preview-delete" type="button" title="Xóa ảnh này" onclick="markDeleteImage(this, \'' + url + '\')">✕</button><input type="hidden" name="deleteImages" value="' + url + '" disabled>';
-    preview.appendChild(item);
-  });
-
-  // Video hiện tại
-  const videoInfo = document.getElementById('editVideoInfo');
-  if (p.video) {
-    videoInfo.innerHTML = '<video src="' + p.video + '" style="max-width:200px;border-radius:8px;margin-bottom:8px;" controls></video><br><button type="button" class="btn btn-danger btn-sm" onclick="markDeleteVideo(this)">🗑 Xóa video này</button>';
-  } else {
-    videoInfo.innerHTML = '<span style="color:var(--text3);font-size:13px;">Chưa có video</span>';
-  }
-
-  // Nội dung mô tả
-  editEditor.innerHTML = p.description || '';
-  cleanEditorContentEdit();
-  if (editEditor.innerHTML.replace(/<br\s*\/?>/gi,'').trim() === '') editEditor.innerHTML = '';
-  editEditor.querySelectorAll('img').forEach(img => {
-    img.classList.remove('img-selected');
-    if (!img.dataset.bound) { img.dataset.bound='1'; bindImageEventsEdit(img); }
-  });
-  editEditor.querySelectorAll('.img-resize-handle').forEach(h => h.remove());
-  editImgToolbar.style.display = 'none';
-  editSelectedImg = null;
-
-  document.getElementById('editModal').classList.add('active');
-  setTimeout(() => { editPageReady = true; }, 800);
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').classList.remove('active');
-  editEditor.innerHTML = '';
-  currentEditId = null;
-  editSelectedImg = null;
-  editImgToolbar.style.display = 'none';
-}
-
-function markDeleteImage(btn, url) {
-  const item = btn.parentNode;
-  const hiddenInput = item.querySelector('input[type="hidden"]');
-  if (item.style.opacity === '0.3') {
-    item.style.opacity = '1';
-    hiddenInput.disabled = true;
-    btn.style.background = 'var(--red)';
-  } else {
-    item.style.opacity = '0.3';
-    hiddenInput.disabled = false;
-    btn.style.background = '#888';
-  }
-}
-
-function markDeleteVideo(btn) {
-  document.getElementById('editDeleteVideo').value = 'yes';
-  btn.disabled = true;
-  btn.textContent = '✓ Sẽ xóa video khi lưu';
-  btn.style.opacity = '0.5';
-}
-
-function submitEdit() {
-  document.getElementById('editDescription').value = editEditor.innerHTML;
-  document.getElementById('editForm').submit();
-}
-
-// Đóng modal khi bấm ra ngoài
-document.getElementById('editModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('editModal')) closeEditModal();
-});
 </script>
 
 </body>

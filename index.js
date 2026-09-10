@@ -155,9 +155,9 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
   { name: 'video', maxCount: 1 }
 ]), async (req, res) => {
   try {
-    const { name, price, location, contact, category, description } = req.body;
+    const { name, price, location, contact, category, description, avatarIndex } = req.body;
 
-    // Upload ảnh lên Cloudinary
+    // Upload ảnh lên Cloudinary — giữ đúng thứ tự file gửi lên
     const uploadedImages = [];
     if (req.files && req.files['images']) {
       for (const file of req.files['images']) {
@@ -174,6 +174,13 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
           console.error('Image upload error:', imgErr.message);
         }
       }
+    }
+
+    // Đưa ảnh được chọn làm avatar lên đầu mảng
+    const avatarIdx = parseInt(avatarIndex) || 0;
+    if (uploadedImages.length > 1 && avatarIdx > 0 && avatarIdx < uploadedImages.length) {
+      const avatarImg = uploadedImages.splice(avatarIdx, 1)[0];
+      uploadedImages.unshift(avatarImg);
     }
 
     // Upload video lên Cloudinary
@@ -226,7 +233,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
     try { product = await getProducts().findOne({ _id: new ObjectId(req.params.id) }); } catch { return res.redirect('/admin'); }
     if (!product) return res.redirect('/admin');
 
-    const { name, price, location, contact, category, description, deleteImages, deleteVideo } = req.body;
+    const { name, price, location, contact, category, description, deleteImages, deleteVideo, avatarUrl, avatarNewIndex } = req.body;
 
     // Xóa ảnh được chọn xóa
     let currentImages = product.images || [];
@@ -245,6 +252,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
     if (descriptionImagesToDelete.length > 0) await deleteCloudinaryImages(descriptionImagesToDelete);
 
     // Upload ảnh mới
+    const newlyUploadedImages = [];
     if (req.files && req.files['images']) {
       for (const file of req.files['images']) {
         const result = await new Promise((resolve, reject) => {
@@ -254,7 +262,30 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
           );
           stream.end(file.buffer);
         });
-        currentImages.push({ url: result.secure_url, bytes: result.bytes });
+        newlyUploadedImages.push({ url: result.secure_url, bytes: result.bytes });
+      }
+    }
+
+    // Gộp ảnh cũ còn lại + ảnh mới upload
+    let allImages = [...currentImages, ...newlyUploadedImages];
+
+    // Xử lý avatar:
+    // avatarUrl = URL ảnh cũ được chọn làm avatar
+    // avatarNewIndex = index trong mảng ảnh mới upload được chọn làm avatar (tính từ 0, offset sau ảnh cũ)
+    if (avatarUrl && avatarUrl !== '') {
+      // Chọn ảnh cũ làm avatar: đưa lên đầu
+      const idx = allImages.findIndex(img => img.url === avatarUrl);
+      if (idx > 0) {
+        const avatarImg = allImages.splice(idx, 1)[0];
+        allImages.unshift(avatarImg);
+      }
+    } else if (avatarNewIndex !== undefined && avatarNewIndex !== '') {
+      // Chọn ảnh mới upload làm avatar
+      const newIdx = parseInt(avatarNewIndex);
+      const absoluteIdx = currentImages.length + newIdx;
+      if (!isNaN(newIdx) && absoluteIdx >= 0 && absoluteIdx < allImages.length) {
+        const avatarImg = allImages.splice(absoluteIdx, 1)[0];
+        allImages.unshift(avatarImg);
       }
     }
 
@@ -286,7 +317,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
         contact: contact || '',
         category: category || 'canho',
         description: description || '',
-        images: currentImages,
+        images: allImages,
         video: videoUrl
       }}
     );
