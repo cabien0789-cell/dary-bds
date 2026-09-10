@@ -214,12 +214,10 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       createdAt: new Date().toISOString()
     });
 
-    res.redirect('/admin');
+    res.json({ ok: true });
   } catch (e) {
     console.error('CREATE ERROR:', e);
-    const products = await getProducts().find().sort({ createdAt: -1 }).toArray().catch(() => []);
-    const settings = await getSettings().findOne({ key: 'contact' }).catch(() => null);
-    res.render('admin', { products, settings: settings || {}, createError: e.message });
+    res.json({ ok: false, error: e.message });
   }
 });
 
@@ -322,10 +320,10 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
       }}
     );
 
-    res.redirect('/admin');
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.redirect('/admin');
+    res.json({ ok: false, error: e.message });
   }
 });
 

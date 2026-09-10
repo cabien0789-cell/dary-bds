@@ -484,22 +484,51 @@ function removeCreateVideo() {
 }
 
 // Submit CREATE — rebuild file input với đúng thứ tự avatar trước
-function submitCreate() {
-  if (createImageFiles.length > 0) {
-    // Sắp xếp: avatar index lên đầu
-    const reordered = [...createImageFiles];
-    if (createAvatarIdx > 0) {
-      const avatarItem = reordered.splice(createAvatarIdx, 1)[0];
-      reordered.unshift(avatarItem);
-    }
-    const dt = new DataTransfer();
-    reordered.forEach(item => dt.items.add(item.file));
-    document.getElementById('createImgInput').files = dt.files;
-    // Avatar index sau khi sắp xếp luôn là 0
-    document.getElementById('createAvatarIndex').value = '0';
+async function submitCreate() {
+  const btn = document.querySelector('#createForm .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+
+  const fd = new FormData();
+  // Lấy dữ liệu từ form (tất cả field text/select)
+  const form = document.getElementById('createForm');
+  fd.append('name', form.querySelector('[name="name"]').value);
+  fd.append('category', form.querySelector('[name="category"]').value);
+  fd.append('price', form.querySelector('[name="price"]').value);
+  fd.append('location', form.querySelector('[name="location"]').value);
+  fd.append('contact', form.querySelector('[name="contact"]').value);
+  fd.append('description', createEditor.innerHTML);
+  fd.append('avatarIndex', '0');
+
+  // Ảnh: sắp xếp avatar lên đầu rồi append từng file
+  const reordered = [...createImageFiles];
+  if (createAvatarIdx > 0 && createAvatarIdx < reordered.length) {
+    const avatarItem = reordered.splice(createAvatarIdx, 1)[0];
+    reordered.unshift(avatarItem);
   }
-  document.getElementById('createDescription').value = createEditor.innerHTML;
-  document.getElementById('createForm').submit();
+  reordered.forEach(item => fd.append('images', item.file));
+
+  // Video
+  const videoInput = document.getElementById('createVideoInput');
+  if (videoInput.files && videoInput.files[0]) {
+    fd.append('video', videoInput.files[0]);
+  }
+
+  try {
+    const res = await fetch('/admin/products/create', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.ok) {
+      window.location.href = '/admin';
+    } else {
+      alert('Lỗi: ' + (data.error || 'Không thể lưu sản phẩm'));
+      btn.disabled = false;
+      btn.textContent = 'Thêm sản phẩm';
+    }
+  } catch(e) {
+    alert('Lỗi kết nối, vui lòng thử lại.');
+    btn.disabled = false;
+    btn.textContent = 'Thêm sản phẩm';
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -730,23 +759,56 @@ function closeEditModal() {
   editNewImageFiles = [];
 }
 
-function submitEdit() {
-  // Rebuild file input với đúng thứ tự
-  if (editNewImageFiles.length > 0) {
-    const reordered = [...editNewImageFiles];
-    // Nếu avatar là ảnh mới, đưa nó lên đầu mảng ảnh mới
-    // (server sẽ xử lý: nếu avatarNewIndex = 0 sau reorder, và không có avatarUrl, thì ảnh mới đầu tiên sẽ lên avatar)
-    if (editAvatarSource === 'new' && editAvatarNewIdx > 0) {
-      const avatarItem = reordered.splice(editAvatarNewIdx, 1)[0];
-      reordered.unshift(avatarItem);
-      document.getElementById('editAvatarNewIndex').value = '0';
-    }
-    const dt = new DataTransfer();
-    reordered.forEach(item => dt.items.add(item.file));
-    document.getElementById('editImgNewInput').files = dt.files;
+async function submitEdit() {
+  const btn = document.querySelector('#editForm .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+
+  const fd = new FormData();
+  fd.append('name', document.getElementById('editName').value);
+  fd.append('category', document.getElementById('editCategory').value);
+  fd.append('price', document.getElementById('editPrice').value);
+  fd.append('location', document.getElementById('editLocation').value);
+  fd.append('contact', document.getElementById('editContact').value);
+  fd.append('description', editEditor.innerHTML);
+  fd.append('deleteVideo', document.getElementById('editDeleteVideo').value);
+  fd.append('avatarUrl', document.getElementById('editAvatarUrl').value);
+  fd.append('avatarNewIndex', '0');
+
+  // Ảnh bị đánh dấu xóa
+  document.querySelectorAll('#editExistingImgGrid .marked-delete input[type="hidden"]').forEach(inp => {
+    fd.append('deleteImages', inp.value);
+  });
+
+  // Ảnh mới: sắp xếp avatar lên đầu
+  const reordered = [...editNewImageFiles];
+  if (editAvatarSource === 'new' && editAvatarNewIdx > 0 && editAvatarNewIdx < reordered.length) {
+    const avatarItem = reordered.splice(editAvatarNewIdx, 1)[0];
+    reordered.unshift(avatarItem);
   }
-  document.getElementById('editDescription').value = editEditor.innerHTML;
-  document.getElementById('editForm').submit();
+  reordered.forEach(item => fd.append('images', item.file));
+
+  // Video mới
+  const videoNewInput = document.getElementById('editVideoNewInput');
+  if (videoNewInput.files && videoNewInput.files[0]) {
+    fd.append('video', videoNewInput.files[0]);
+  }
+
+  try {
+    const res = await fetch('/admin/products/' + currentEditId + '/edit', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.ok) {
+      window.location.href = '/admin';
+    } else {
+      alert('Lỗi: ' + (data.error || 'Không thể lưu sản phẩm'));
+      btn.disabled = false;
+      btn.textContent = 'Lưu thay đổi';
+    }
+  } catch(e) {
+    alert('Lỗi kết nối, vui lòng thử lại.');
+    btn.disabled = false;
+    btn.textContent = 'Lưu thay đổi';
+  }
 }
 
 // Đóng modal khi bấm ra ngoài
