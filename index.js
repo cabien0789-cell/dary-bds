@@ -395,10 +395,20 @@ app.post('/admin/products/reorder', requireAdmin, async (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) return res.json({ error: 'Dữ liệu không hợp lệ.' });
   try {
-    for (let i = 0; i < order.length; i++) {
+    // Lấy thông tin pinnedAt của từng item để tách vùng ghim / không ghim
+    const ids = order.map(id => { try { return new ObjectId(id); } catch { return null; } }).filter(Boolean);
+    const products = await getProducts().find({ _id: { $in: ids } }, { projection: { _id: 1, pinnedAt: 1 } }).toArray();
+    const pinnedMap = {};
+    products.forEach(p => { pinnedMap[p._id.toString()] = !!p.pinnedAt; });
+    // Item ghim: gán order âm (-1000, -999...), item không ghim: gán order dương (0, 1, 2...)
+    let pinnedIdx = -1000;
+    let unpinnedIdx = 0;
+    for (const id of order) {
+      const isPinned = pinnedMap[id];
+      const orderVal = isPinned ? pinnedIdx++ : unpinnedIdx++;
       await getProducts().updateOne(
-        { _id: new ObjectId(order[i]) },
-        { $set: { order: i } }
+        { _id: new ObjectId(id) },
+        { $set: { order: orderVal } }
       );
     }
     res.json({ ok: true });
