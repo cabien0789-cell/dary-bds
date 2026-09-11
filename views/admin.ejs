@@ -729,9 +729,9 @@ function openEditModal(id) {
   document.getElementById('editNewImgPreview').innerHTML = '';
   document.getElementById('editVideoNewPreview').innerHTML = '';
 
-  // Ảnh hiện tại — ảnh đầu tiên là avatar mặc định
+  // Ảnh hiện tại — lấy avatarUrl đã lưu, không tự lấy ảnh đầu tiên
   const images = p.images || [];
-  const defaultAvatarUrl = images.length > 0 ? (typeof images[0] === 'string' ? images[0] : images[0].url) : '';
+  const defaultAvatarUrl = p.avatarUrl || (images.length > 0 ? (typeof images[0] === 'string' ? images[0] : images[0].url) : '');
   editAvatarExistingUrl = defaultAvatarUrl;
   document.getElementById('editAvatarUrl').value = defaultAvatarUrl;
   renderEditExistingImages(images, defaultAvatarUrl);
