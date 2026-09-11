@@ -258,8 +258,7 @@
 
     <!-- Tab lọc loại -->
     <div class="admin-tab-bar">
-      <button class="admin-tab active" onclick="switchAdminTab('all', this)">Tất cả (<%= products.length %>)</button>
-      <button class="admin-tab" onclick="switchAdminTab('canho', this)">🏢 Căn hộ (<%= products.filter(p=>p.category==='canho').length %>)</button>
+      <button class="admin-tab active" onclick="switchAdminTab('canho', this)">🏢 Căn hộ (<%= products.filter(p=>p.category==='canho').length %>)</button>
       <button class="admin-tab" onclick="switchAdminTab('nhao', this)">🏠 Nhà ở (<%= products.filter(p=>p.category==='nhao').length %>)</button>
       <button class="admin-tab" onclick="switchAdminTab('dat', this)">🌿 Đất nền (<%= products.filter(p=>p.category==='dat').length %>)</button>
     </div>
@@ -1519,7 +1518,7 @@ function showErrorEdit(msg) {
 }
 
 // ── TAB LỌC DANH SÁCH ADMIN ──
-let currentAdminTab = 'all';
+let currentAdminTab = 'canho';
 function switchAdminTab(tab, btn) {
   currentAdminTab = tab;
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
@@ -1535,7 +1534,10 @@ function switchAdminTab(tab, btn) {
 
 // ── KÉO THẢ SẮP XẾP ──
 let dragSrc = null;
-const list = document.getElementById('adminProductList');
+// Khi load trang mặc định hiện tab Căn hộ
+  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
+
+  const list = document.getElementById('adminProductList');
 if (list) {
   list.addEventListener('dragstart', e => {
     const card = e.target.closest('.admin-product-card');
@@ -1593,7 +1595,10 @@ async function togglePin(id, btn) {
       card.querySelector('.admin-product-name').prepend(badge);
     }
     // Đưa card ghim lên đầu danh sách (trên cùng trong nhóm ghim)
-    const list = document.getElementById('adminProductList');
+    // Khi load trang mặc định hiện tab Căn hộ
+  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
+
+  const list = document.getElementById('adminProductList');
     const firstUnpinned = Array.from(list.querySelectorAll('.admin-product-card')).find(c => !c.querySelector('.pin-badge'));
     if (firstUnpinned) list.insertBefore(card, firstUnpinned);
     else list.prepend(card);
@@ -1604,7 +1609,10 @@ async function togglePin(id, btn) {
     const badge = card.querySelector('.pin-badge');
     if (badge) badge.remove();
     // Đưa card về sau nhóm ghim
-    const list = document.getElementById('adminProductList');
+    // Khi load trang mặc định hiện tab Căn hộ
+  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
+
+  const list = document.getElementById('adminProductList');
     const lastPinned = Array.from(list.querySelectorAll('.admin-product-card')).filter(c => c.querySelector('.pin-badge')).pop();
     if (lastPinned) list.insertBefore(card, lastPinned.nextSibling);
   }
