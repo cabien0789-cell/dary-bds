@@ -731,9 +731,10 @@ function openEditModal(id) {
   document.getElementById('editNewImgPreview').innerHTML = '';
   document.getElementById('editVideoNewPreview').innerHTML = '';
 
-  // Ảnh hiện tại — lấy avatarUrl đã lưu, không tự lấy ảnh đầu tiên
-  const images = p.images || [];
-  const defaultAvatarUrl = p.avatarUrl || (images.length > 0 ? (typeof images[0] === 'string' ? images[0] : images[0].url) : '');
+  // Ảnh hiện tại — chỉ hiển thị ảnh sản phẩm, không hiển thị ảnh mô tả
+  const images = (p.images || []).filter(img => img && img.url && !img.url.includes('dary-bds/desc'));
+  const avatarInList = p.avatarUrl && images.some(img => img.url === p.avatarUrl);
+  const defaultAvatarUrl = avatarInList ? p.avatarUrl : (images.length > 0 ? images[0].url : '');
   editAvatarExistingUrl = defaultAvatarUrl;
   document.getElementById('editAvatarUrl').value = defaultAvatarUrl;
   renderEditExistingImages(images, defaultAvatarUrl);
