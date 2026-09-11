@@ -395,10 +395,21 @@ app.post('/admin/products/reorder', requireAdmin, async (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) return res.json({ error: 'Dữ liệu không hợp lệ.' });
   try {
-    for (let i = 0; i < order.length; i++) {
+    // Lấy pinnedAt của từng item để biết thuộc nhóm nào
+    const ids = order.map(id => new ObjectId(id));
+    const products = await getProducts().find({ _id: { $in: ids } }, { projection: { _id: 1, pinnedAt: 1 } }).toArray();
+    const pinnedMap = {};
+    products.forEach(p => { pinnedMap[String(p._id)] = !!p.pinnedAt; });
+
+    // Gán order riêng cho 2 nhóm: ghim dùng 0,1,2...; không ghim dùng 100000,100001,...
+    // Nhờ vậy sort { pinnedAt: -1, order: 1 } giữ đúng thứ tự từng nhóm sau khi kéo thả
+    let pinnedCounter = 0;
+    let unpinnedCounter = 100000;
+    for (const id of order) {
+      const orderVal = pinnedMap[id] ? pinnedCounter++ : unpinnedCounter++;
       await getProducts().updateOne(
-        { _id: new ObjectId(order[i]) },
-        { $set: { order: i } }
+        { _id: new ObjectId(id) },
+        { $set: { order: orderVal } }
       );
     }
     res.json({ ok: true });
