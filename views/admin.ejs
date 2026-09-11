@@ -1548,6 +1548,10 @@ if (list) {
     e.preventDefault();
     const card = e.target.closest('.admin-product-card');
     if (!card || card === dragSrc) return;
+    // Chỉ cho kéo trong cùng vùng: ghim với ghim, không ghim với không ghim
+    const srcPinned = !!dragSrc.querySelector('.pin-badge');
+    const targetPinned = !!card.querySelector('.pin-badge');
+    if (srcPinned !== targetPinned) return;
     document.querySelectorAll('.admin-product-card').forEach(c => c.classList.remove('drag-over'));
     card.classList.add('drag-over');
     const rect = card.getBoundingClientRect();
