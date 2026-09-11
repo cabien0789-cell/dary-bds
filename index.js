@@ -95,7 +95,7 @@ function extractImageUrlsFromContent(content) {
 
 // ─── TRANG CHỦ ────────────────────────────────────────────
 app.get('/', async (req, res) => {
-  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ pinnedAt: -1, order: 1 }).toArray();
+  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ order: 1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('index', { products, settings: settings || {} });
 });
@@ -133,7 +133,7 @@ app.get('/admin/logout', (req, res) => {
 
 // ─── ADMIN TRANG CHÍNH ────────────────────────────────────
 app.get('/admin', requireAdmin, async (req, res) => {
-  const products = await getProducts().find().sort({ pinnedAt: -1, order: 1 }).toArray();
+  const products = await getProducts().find().sort({ order: 1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('admin', { products, settings: settings || {} });
 });
@@ -200,8 +200,9 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       }
     }
 
-    // Tính order = số sản phẩm hiện tại trong cùng category + 1
-    const categoryCount = await getProducts().countDocuments({ category: category || 'canho' });
+    // Lấy order nhỏ nhất trong nhóm không ghim rồi trừ 1 → item mới đứng đầu nhóm không ghim
+    const topUnpinned = await getProducts().find({ pinnedAt: null }).sort({ order: 1 }).limit(1).toArray();
+    const newOrder = topUnpinned.length > 0 ? topUnpinned[0].order - 1 : 0;
     await getProducts().insertOne({
       name: name || '',
       price: price || '',
@@ -213,7 +214,7 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       avatarUrl: avatarUrl,
       video: videoUrl,
       hidden: false,
-      order: -Date.now(),
+      order: newOrder,
       pinnedAt: null,
       createdAt: new Date().toISOString()
     });
@@ -395,10 +396,22 @@ app.post('/admin/products/reorder', requireAdmin, async (req, res) => {
   const { order } = req.body;
   if (!Array.isArray(order)) return res.json({ error: 'Dữ liệu không hợp lệ.' });
   try {
-    for (let i = 0; i < order.length; i++) {
+    // Lấy pinnedAt của từng item để biết thuộc nhóm nào
+    const ids = order.map(id => new ObjectId(id));
+    const products = await getProducts().find({ _id: { $in: ids } }, { projection: { _id: 1, pinnedAt: 1 } }).toArray();
+    const pinnedMap = {};
+    products.forEach(p => { pinnedMap[String(p._id)] = !!p.pinnedAt; });
+
+    // Nhóm ghim: order = -200000, -199999, -199998, ...  (luôn âm → đứng trước nhóm không ghim)
+    // Nhóm không ghim: order = 0, 1, 2, ...              (luôn dương hoặc 0)
+    // Sort duy nhất { order: 1 } → ghim luôn đứng trên, thứ tự trong mỗi nhóm đúng theo kéo thả
+    let pinnedCounter = -200000;
+    let unpinnedCounter = 0;
+    for (const id of order) {
+      const orderVal = pinnedMap[id] ? pinnedCounter++ : unpinnedCounter++;
       await getProducts().updateOne(
-        { _id: new ObjectId(order[i]) },
-        { $set: { order: i } }
+        { _id: new ObjectId(id) },
+        { $set: { order: orderVal } }
       );
     }
     res.json({ ok: true });
@@ -412,10 +425,22 @@ app.post('/admin/products/:id/pin', requireAdmin, async (req, res) => {
     try { product = await getProducts().findOne({ _id: new ObjectId(req.params.id) }); } catch { return res.json({ error: 'Lỗi.' }); }
     if (!product) return res.json({ error: 'Không tìm thấy.' });
     const isPinned = !!product.pinnedAt;
-    await getProducts().updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: { pinnedAt: isPinned ? null : new Date().toISOString() } }
-    );
+    if (isPinned) {
+      // Bỏ ghim: gán pinnedAt=null, order=-1 để đứng đầu nhóm không ghim (phía client đã prepend sau nhóm ghim)
+      await getProducts().updateOne(
+        { _id: new ObjectId(req.params.id) },
+        { $set: { pinnedAt: null, order: -1 } }
+      );
+    } else {
+      // Ghim: lấy order nhỏ nhất trong nhóm ghim hiện tại rồi trừ 1 → đứng đầu nhóm ghim
+      const topPinned = await getProducts().find({ pinnedAt: { $ne: null }, _id: { $ne: new ObjectId(req.params.id) } })
+        .sort({ order: 1 }).limit(1).toArray();
+      const newOrder = topPinned.length > 0 ? topPinned[0].order - 1 : -200000;
+      await getProducts().updateOne(
+        { _id: new ObjectId(req.params.id) },
+        { $set: { pinnedAt: new Date().toISOString(), order: newOrder } }
+      );
+    }
     res.json({ ok: true, pinned: !isPinned });
   } catch (e) { res.json({ error: 'Lỗi.' }); }
 });
