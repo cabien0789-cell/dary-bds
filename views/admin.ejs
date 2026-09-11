@@ -110,7 +110,15 @@
 
 <!-- TOPBAR -->
 <div class="admin-topbar">
-  <div class="admin-topbar-brand">🏠 Dary BDS — Quản trị</div>
+  <div class="admin-topbar-brand" style="display:flex;align-items:center;gap:10px;">
+    <svg width="28" height="28" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <path d="M 195,115 L 195,565 L 290,565 C 465,565 565,462 565,340 C 565,218 465,115 290,115 Z M 258,182 L 290,182 C 422,182 495,252 495,340 C 495,428 422,498 290,498 L 258,498 Z" fill="#C9922A"/>
+      <g transform="translate(350,335) rotate(-30)">
+        <path d="M -230,-18 L 0,-18 L 0,-65 Q 0,-73 8,-73 L 62,-73 Q 70,-73 70,-65 L 70,65 Q 70,73 62,73 L 8,73 Q 0,73 0,65 L 0,18 L -230,18 Q -238,18 -238,10 L -238,-10 Q -238,-18 -230,-18 Z" fill="#C9922A"/>
+      </g>
+    </svg>
+    Dary BDS — Quản trị
+  </div>
   <div class="admin-topbar-right">
     <a href="/" target="_blank" class="btn btn-outline btn-sm">Xem trang web</a>
     <a href="/admin/logout" class="btn btn-logout btn-sm">Đăng xuất</a>
@@ -177,6 +185,18 @@
           <input type="text" name="contact" placeholder="Ví dụ: 0901234567">
         </div>
 
+        <!-- VIDEO -->
+        <div class="field-group">
+          <label>Video (không bắt buộc)</label>
+          <div class="upload-zone" id="createVideoZone">
+            <input type="file" name="video" accept="video/mp4" id="createVideoInput" onchange="handleCreateVideo(this)">
+            <div class="upload-zone-icon">🎬</div>
+            <div class="upload-zone-text">Bấm để chọn video</div>
+            <div class="upload-zone-sub">Định dạng MP4</div>
+          </div>
+          <div id="createVideoPreview"></div>
+        </div>
+
         <!-- ẢNH SẢN PHẨM -->
         <div class="field-group">
           <label>Ảnh sản phẩm — bấm vào ảnh để chọn làm ảnh đại diện (viền vàng)</label>
@@ -188,18 +208,6 @@
           </div>
           <div class="img-preview-grid" id="createImgPreview"></div>
           <input type="hidden" name="avatarIndex" id="createAvatarIndex" value="0">
-        </div>
-
-        <!-- VIDEO -->
-        <div class="field-group">
-          <label>Video (không bắt buộc)</label>
-          <div class="upload-zone" id="createVideoZone">
-            <input type="file" name="video" accept="video/mp4" id="createVideoInput" onchange="handleCreateVideo(this)">
-            <div class="upload-zone-icon">🎬</div>
-            <div class="upload-zone-text">Bấm để chọn video</div>
-            <div class="upload-zone-sub">Định dạng MP4</div>
-          </div>
-          <div id="createVideoPreview"></div>
         </div>
 
         <div class="field-group">
@@ -253,10 +261,11 @@
     <div class="admin-products-list">
       <% products.forEach(p => { %>
       <div class="admin-product-card">
-        <% if (p.images && p.images.length > 0) { %>
-          <img class="admin-product-img" src="<%= typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url %>" alt="<%= p.name %>">
+        <% const adminAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+        <% if (adminAvatar) { %>
+          <img class="admin-product-img" src="<%= adminAvatar %>" alt="<%= p.name %>">
         <% } else { %>
-          <div class="admin-product-img-placeholder"><%= { canho: '🏢', nhao: '🏠', dat: '🌿' }[p.category] || '🏠' %></div>
+          <div class="admin-product-img-placeholder"><%= { canho: '🏢', nhao: '🏠', dat: '🌿' }[p.category] || '🏢' %></div>
         <% } %>
         <div class="admin-product-info">
           <div class="admin-product-name"><%= p.name %></div>
@@ -498,15 +507,11 @@ async function submitCreate() {
   fd.append('location', form.querySelector('[name="location"]').value || '');
   fd.append('contact', form.querySelector('[name="contact"]').value || '');
   fd.append('description', createEditor.innerHTML);
-  fd.append('avatarIndex', '0');
+  // Gửi avatarIndex đúng (index của ảnh được chọn làm đại diện trong thứ tự gốc)
+  fd.append('avatarIndex', String(createAvatarIdx));
 
-  // Sắp xếp avatar lên đầu rồi append file thật vào FormData
-  const reordered = [...createImageFiles];
-  if (createAvatarIdx > 0 && createAvatarIdx < reordered.length) {
-    const avatarItem = reordered.splice(createAvatarIdx, 1)[0];
-    reordered.unshift(avatarItem);
-  }
-  reordered.forEach(item => fd.append('images', item.file, item.file.name));
+  // Gửi ảnh đúng thứ tự gốc, không sắp xếp lại
+  createImageFiles.forEach(item => fd.append('images', item.file, item.file.name));
 
   // Video
   const videoInput = document.getElementById('createVideoInput');
@@ -781,13 +786,8 @@ async function submitEdit() {
     fd.append('deleteImages', inp.value);
   });
 
-  // Ảnh mới: sắp xếp avatar lên đầu
-  const reordered = [...editNewImageFiles];
-  if (editAvatarSource === 'new' && editAvatarNewIdx > 0 && editAvatarNewIdx < reordered.length) {
-    const avatarItem = reordered.splice(editAvatarNewIdx, 1)[0];
-    reordered.unshift(avatarItem);
-  }
-  reordered.forEach(item => fd.append('images', item.file, item.file.name));
+  // Ảnh mới: gửi đúng thứ tự gốc, không sắp xếp lại
+  editNewImageFiles.forEach(item => fd.append('images', item.file, item.file.name));
 
   // Video mới
   const videoNewInput = document.getElementById('editVideoNewInput');

@@ -76,8 +76,9 @@
       <% } else { %>
         <% canho.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% const canhoAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% if (canhoAvatar) { %>
+              <img class="product-card-img" src="<%= canhoAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🏢</div>
             <% } %>
@@ -106,8 +107,9 @@
       <% } else { %>
         <% nhao.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% const nhaoAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% if (nhaoAvatar) { %>
+              <img class="product-card-img" src="<%= nhaoAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🏠</div>
             <% } %>
@@ -136,8 +138,9 @@
       <% } else { %>
         <% dat.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% if (p.images && p.images.length > 0) { %>
-              <img class="product-card-img" src="<%= p.images[0].url %>" alt="<%= p.name %>" loading="lazy">
+            <% const datAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% if (datAvatar) { %>
+              <img class="product-card-img" src="<%= datAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
               <div class="product-card-img-placeholder">🌿</div>
             <% } %>

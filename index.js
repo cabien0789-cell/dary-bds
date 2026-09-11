@@ -176,12 +176,11 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       }
     }
 
-    // Đưa ảnh được chọn làm avatar lên đầu mảng
+    // Xác định avatarUrl — không đẩy ảnh lên đầu, giữ nguyên thứ tự
     const avatarIdx = parseInt(avatarIndex) || 0;
-    if (uploadedImages.length > 1 && avatarIdx > 0 && avatarIdx < uploadedImages.length) {
-      const avatarImg = uploadedImages.splice(avatarIdx, 1)[0];
-      uploadedImages.unshift(avatarImg);
-    }
+    const avatarUrl = (uploadedImages.length > 0 && avatarIdx >= 0 && avatarIdx < uploadedImages.length)
+      ? uploadedImages[avatarIdx].url
+      : (uploadedImages.length > 0 ? uploadedImages[0].url : '');
 
     // Upload video lên Cloudinary
     let videoUrl = null;
@@ -209,6 +208,7 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       category: category || 'canho',
       description: description || '',
       images: uploadedImages,
+      avatarUrl: avatarUrl,
       video: videoUrl,
       hidden: false,
       createdAt: new Date().toISOString()
@@ -266,27 +266,24 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
       }
     }
 
-    // Gộp ảnh cũ còn lại + ảnh mới upload
+    // Gộp ảnh cũ còn lại + ảnh mới upload — giữ nguyên thứ tự, không đẩy avatar lên đầu
     let allImages = [...currentImages, ...newlyUploadedImages];
 
-    // Xử lý avatar:
-    // avatarUrl = URL ảnh cũ được chọn làm avatar
-    // avatarNewIndex = index trong mảng ảnh mới upload được chọn làm avatar (tính từ 0, offset sau ảnh cũ)
+    // Xác định avatarUrl — chỉ lưu URL ảnh đại diện, không xáo trộn thứ tự mảng
+    let finalAvatarUrl = '';
     if (avatarUrl && avatarUrl !== '') {
-      // Chọn ảnh cũ làm avatar: đưa lên đầu
-      const idx = allImages.findIndex(img => img.url === avatarUrl);
-      if (idx > 0) {
-        const avatarImg = allImages.splice(idx, 1)[0];
-        allImages.unshift(avatarImg);
-      }
+      // Chọn ảnh cũ làm avatar
+      finalAvatarUrl = avatarUrl;
     } else if (avatarNewIndex !== undefined && avatarNewIndex !== '') {
       // Chọn ảnh mới upload làm avatar
       const newIdx = parseInt(avatarNewIndex);
       const absoluteIdx = currentImages.length + newIdx;
       if (!isNaN(newIdx) && absoluteIdx >= 0 && absoluteIdx < allImages.length) {
-        const avatarImg = allImages.splice(absoluteIdx, 1)[0];
-        allImages.unshift(avatarImg);
+        finalAvatarUrl = allImages[absoluteIdx].url;
       }
+    } else {
+      // Không có lựa chọn mới — giữ avatarUrl cũ nếu có, hoặc lấy ảnh đầu tiên
+      finalAvatarUrl = product.avatarUrl || (allImages.length > 0 ? allImages[0].url : '');
     }
 
     // Xử lý video
@@ -318,6 +315,7 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
         category: category || 'canho',
         description: description || '',
         images: allImages,
+        avatarUrl: finalAvatarUrl,
         video: videoUrl
       }}
     );
