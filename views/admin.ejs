@@ -255,12 +255,22 @@
   <!-- DANH SÁCH SẢN PHẨM -->
   <div class="admin-section">
     <div class="admin-section-title">📋 Danh sách sản phẩm (<%= products.length %>)</div>
+
+    <!-- Tab lọc loại -->
+    <div class="admin-tab-bar">
+      <button class="admin-tab active" onclick="switchAdminTab('all', this)">Tất cả (<%= products.length %>)</button>
+      <button class="admin-tab" onclick="switchAdminTab('canho', this)">🏢 Căn hộ (<%= products.filter(p=>p.category==='canho').length %>)</button>
+      <button class="admin-tab" onclick="switchAdminTab('nhao', this)">🏠 Nhà ở (<%= products.filter(p=>p.category==='nhao').length %>)</button>
+      <button class="admin-tab" onclick="switchAdminTab('dat', this)">🌿 Đất nền (<%= products.filter(p=>p.category==='dat').length %>)</button>
+    </div>
+
     <% if (products.length === 0) { %>
       <div style="padding:40px;text-align:center;color:var(--text3);">Chưa có sản phẩm nào.</div>
     <% } else { %>
-    <div class="admin-products-list">
+    <div class="admin-products-list" id="adminProductList">
       <% products.forEach(p => { %>
-      <div class="admin-product-card">
+      <div class="admin-product-card" data-id="<%= p._id %>" data-category="<%= p.category %>" draggable="true">
+        <div class="drag-handle" title="Kéo để sắp xếp">⠿</div>
         <% const _imgs = (p.images || []).filter(img => img && img.url && !img.url.includes("dary-bds/desc")); %>
         <% const _avatarInList = p.avatarUrl && _imgs.some(img => img.url === p.avatarUrl); %>
         <% const adminAvatar = _avatarInList ? p.avatarUrl : (_imgs.length > 0 ? _imgs[0].url : ""); %>
@@ -270,7 +280,10 @@
           <div class="admin-product-img-placeholder"><%= { canho: '🏢', nhao: '🏠', dat: '🌿' }[p.category] || '🏢' %></div>
         <% } %>
         <div class="admin-product-info">
-          <div class="admin-product-name"><%= p.name %></div>
+          <div class="admin-product-name">
+            <% if (p.pinnedAt) { %><span class="pin-badge">📌 Đã ghim</span><% } %>
+            <%= p.name %>
+          </div>
           <div class="admin-product-meta">
             <span class="admin-product-category"><%= { canho: 'Căn hộ', nhao: 'Nhà ở', dat: 'Đất' }[p.category] || p.category %></span>
             <% if (p.price) { %><span>💰 <%= p.price %></span><% } %>
@@ -278,6 +291,7 @@
           </div>
         </div>
         <div class="admin-product-actions">
+          <button class="btn btn-pin btn-sm <%= p.pinnedAt ? 'pinned' : '' %>" onclick="togglePin('<%= p._id %>', this)"><%= p.pinnedAt ? '📌 Bỏ ghim' : '📌 Ghim' %></button>
           <button class="btn btn-outline btn-sm" onclick="openEditModal('<%= p._id %>')">✏️ Sửa</button>
           <form method="POST" action="/admin/products/<%= p._id %>/delete" style="display:inline" onsubmit="return confirm('Xóa sản phẩm này? Hành động không thể hoàn tác.')">
             <button type="submit" class="btn btn-danger btn-sm">🗑 Xóa</button>
@@ -1502,6 +1516,99 @@ async function uploadImageEdit(input) {
 function showErrorEdit(msg) {
   const el = document.getElementById('editError');
   el.textContent = msg; el.style.display = 'block';
+}
+
+// ── TAB LỌC DANH SÁCH ADMIN ──
+let currentAdminTab = 'all';
+function switchAdminTab(tab, btn) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#adminProductList .admin-product-card').forEach(card => {
+    if (tab === 'all' || card.dataset.category === tab) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ── KÉO THẢ SẮP XẾP ──
+let dragSrc = null;
+const list = document.getElementById('adminProductList');
+if (list) {
+  list.addEventListener('dragstart', e => {
+    const card = e.target.closest('.admin-product-card');
+    if (!card) return;
+    dragSrc = card;
+    card.classList.add('dragging');
+  });
+  list.addEventListener('dragend', e => {
+    const card = e.target.closest('.admin-product-card');
+    if (card) card.classList.remove('dragging');
+    document.querySelectorAll('.admin-product-card').forEach(c => c.classList.remove('drag-over'));
+    saveReorder();
+  });
+  list.addEventListener('dragover', e => {
+    e.preventDefault();
+    const card = e.target.closest('.admin-product-card');
+    if (!card || card === dragSrc) return;
+    document.querySelectorAll('.admin-product-card').forEach(c => c.classList.remove('drag-over'));
+    card.classList.add('drag-over');
+    const rect = card.getBoundingClientRect();
+    const mid = rect.top + rect.height / 2;
+    if (e.clientY < mid) {
+      list.insertBefore(dragSrc, card);
+    } else {
+      list.insertBefore(dragSrc, card.nextSibling);
+    }
+  });
+}
+
+async function saveReorder() {
+  const cards = document.querySelectorAll('#adminProductList .admin-product-card');
+  const order = Array.from(cards).map(c => c.dataset.id);
+  await fetch('/admin/products/reorder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order })
+  });
+}
+
+// ── GHIM / BỎ GHIM ──
+async function togglePin(id, btn) {
+  const res = await fetch('/admin/products/' + id + '/pin', { method: 'POST' });
+  const data = await res.json();
+  if (data.error) { alert(data.error); return; }
+  // Cập nhật giao diện nút và badge không cần reload
+  if (data.pinned) {
+    btn.textContent = '📌 Bỏ ghim';
+    btn.classList.add('pinned');
+    const card = btn.closest('.admin-product-card');
+    let badge = card.querySelector('.pin-badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'pin-badge';
+      badge.textContent = '📌 Đã ghim';
+      card.querySelector('.admin-product-name').prepend(badge);
+    }
+    // Đưa card ghim lên đầu danh sách (trên cùng trong nhóm ghim)
+    const list = document.getElementById('adminProductList');
+    const firstUnpinned = Array.from(list.querySelectorAll('.admin-product-card')).find(c => !c.querySelector('.pin-badge'));
+    if (firstUnpinned) list.insertBefore(card, firstUnpinned);
+    else list.prepend(card);
+  } else {
+    btn.textContent = '📌 Ghim';
+    btn.classList.remove('pinned');
+    const card = btn.closest('.admin-product-card');
+    const badge = card.querySelector('.pin-badge');
+    if (badge) badge.remove();
+    // Đưa card về sau nhóm ghim
+    const list = document.getElementById('adminProductList');
+    const lastPinned = Array.from(list.querySelectorAll('.admin-product-card')).filter(c => c.querySelector('.pin-badge')).pop();
+    if (lastPinned) list.insertBefore(card, lastPinned.nextSibling);
+  }
+  saveReorder();
 }
 </script>
 

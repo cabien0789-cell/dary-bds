@@ -732,6 +732,36 @@ a:hover { color: var(--primary); }
 }
 
 /* ── DANH SÁCH SẢN PHẨM ADMIN ── */
+.admin-tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.admin-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 .admin-products-list {
   display: flex;
   flex-direction: column;
@@ -748,11 +778,64 @@ a:hover { color: var(--primary); }
   gap: 18px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  cursor: default;
 }
 
 .admin-product-card:hover {
   border-color: var(--primary);
   box-shadow: var(--shadow);
+}
+
+.admin-product-card.dragging {
+  opacity: 0.45;
+}
+
+.admin-product-card.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.drag-handle {
+  color: var(--text3);
+  font-size: 20px;
+  cursor: grab;
+  padding: 0 4px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.pin-badge {
+  display: inline-block;
+  background: #fff7e6;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.btn-pin {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  transition: var(--transition);
+}
+
+.btn-pin:hover {
+  border-color: #b45309;
+  color: #b45309;
+}
+
+.btn-pin.pinned {
+  background: #fff7e6;
+  border-color: #b45309;
+  color: #b45309;
 }
 
 .admin-product-img {

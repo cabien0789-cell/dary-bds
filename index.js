@@ -95,7 +95,7 @@ function extractImageUrlsFromContent(content) {
 
 // ─── TRANG CHỦ ────────────────────────────────────────────
 app.get('/', async (req, res) => {
-  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ createdAt: -1 }).toArray();
+  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ pinnedAt: -1, order: 1, createdAt: -1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('index', { products, settings: settings || {} });
 });
@@ -133,7 +133,7 @@ app.get('/admin/logout', (req, res) => {
 
 // ─── ADMIN TRANG CHÍNH ────────────────────────────────────
 app.get('/admin', requireAdmin, async (req, res) => {
-  const products = await getProducts().find().sort({ createdAt: -1 }).toArray();
+  const products = await getProducts().find().sort({ pinnedAt: -1, order: 1, createdAt: -1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('admin', { products, settings: settings || {} });
 });
@@ -200,6 +200,8 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       }
     }
 
+    // Tính order = số sản phẩm hiện tại trong cùng category + 1
+    const categoryCount = await getProducts().countDocuments({ category: category || 'canho' });
     await getProducts().insertOne({
       name: name || '',
       price: price || '',
@@ -211,6 +213,8 @@ app.post('/admin/products/create', requireAdmin, upload.fields([
       avatarUrl: avatarUrl,
       video: videoUrl,
       hidden: false,
+      order: categoryCount,
+      pinnedAt: null,
       createdAt: new Date().toISOString()
     });
 
@@ -384,6 +388,36 @@ app.post('/admin/products/:id/upload-image', requireAdmin, upload.single('image'
   } catch (e) {
     res.json({ error: 'Upload thất bại.' });
   }
+});
+
+// ─── ADMIN KÉO THẢ THỨ TỰ SẢN PHẨM ────────────────────────
+app.post('/admin/products/reorder', requireAdmin, async (req, res) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.json({ error: 'Dữ liệu không hợp lệ.' });
+  try {
+    for (let i = 0; i < order.length; i++) {
+      await getProducts().updateOne(
+        { _id: new ObjectId(order[i]) },
+        { $set: { order: i } }
+      );
+    }
+    res.json({ ok: true });
+  } catch (e) { res.json({ error: 'Lỗi.' }); }
+});
+
+// ─── ADMIN GHIM / BỎ GHIM SẢN PHẨM ─────────────────────────
+app.post('/admin/products/:id/pin', requireAdmin, async (req, res) => {
+  try {
+    let product;
+    try { product = await getProducts().findOne({ _id: new ObjectId(req.params.id) }); } catch { return res.json({ error: 'Lỗi.' }); }
+    if (!product) return res.json({ error: 'Không tìm thấy.' });
+    const isPinned = !!product.pinnedAt;
+    await getProducts().updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { pinnedAt: isPinned ? null : new Date().toISOString() } }
+    );
+    res.json({ ok: true, pinned: !isPinned });
+  } catch (e) { res.json({ error: 'Lỗi.' }); }
 });
 
 // ─── ERROR ────────────────────────────────────────────────
