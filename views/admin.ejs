@@ -774,12 +774,7 @@ async function submitEdit() {
   fd.append('description', editEditor.innerHTML);
   fd.append('deleteVideo', document.getElementById('editDeleteVideo').value);
   fd.append('avatarUrl', document.getElementById('editAvatarUrl').value || '');
-  // Chỉ gửi avatarNewIndex khi thật sự có ảnh mới được chọn làm avatar
-  if (editAvatarSource === 'new' && editAvatarNewIdx >= 0) {
-    fd.append('avatarNewIndex', String(editAvatarNewIdx));
-  } else {
-    fd.append('avatarNewIndex', '');
-  }
+  fd.append('avatarNewIndex', '0');
 
   // Ảnh bị đánh dấu xóa
   document.querySelectorAll('#editExistingImgGrid .marked-delete input[type="hidden"]').forEach(inp => {

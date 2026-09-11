@@ -250,11 +250,6 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
       return img.url && img.url.includes('dary-bds/desc') && !urlsInDescription.includes(img.url);
     });
     if (descriptionImagesToDelete.length > 0) await deleteCloudinaryImages(descriptionImagesToDelete);
-    // Loại ảnh desc đã xóa ra khỏi currentImages trước khi build allImages
-    const descDeleteUrls = descriptionImagesToDelete.map(img => img.url);
-    if (descDeleteUrls.length > 0) {
-      currentImages = currentImages.filter(img => !descDeleteUrls.includes(img.url));
-    }
 
     // Upload ảnh mới
     const newlyUploadedImages = [];
