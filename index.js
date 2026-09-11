@@ -272,18 +272,34 @@ app.post('/admin/products/:id/edit', requireAdmin, upload.fields([
     // Xác định avatarUrl — chỉ lưu URL ảnh đại diện, không xáo trộn thứ tự mảng
     let finalAvatarUrl = '';
     if (avatarUrl && avatarUrl !== '') {
-      // Chọn ảnh cũ làm avatar
-      finalAvatarUrl = avatarUrl;
+      // Chọn ảnh cũ làm avatar — kiểm tra URL đó còn tồn tại trong allImages sau khi xóa
+      const stillExists = allImages.some(img => img.url === avatarUrl);
+      if (stillExists) {
+        finalAvatarUrl = avatarUrl;
+      } else if (avatarNewIndex !== undefined && avatarNewIndex !== '') {
+        const newIdx = parseInt(avatarNewIndex);
+        const absoluteIdx = currentImages.length + newIdx;
+        if (!isNaN(newIdx) && absoluteIdx >= 0 && absoluteIdx < allImages.length) {
+          finalAvatarUrl = allImages[absoluteIdx].url;
+        } else {
+          finalAvatarUrl = allImages.length > 0 ? allImages[0].url : '';
+        }
+      } else {
+        finalAvatarUrl = allImages.length > 0 ? allImages[0].url : '';
+      }
     } else if (avatarNewIndex !== undefined && avatarNewIndex !== '') {
       // Chọn ảnh mới upload làm avatar
       const newIdx = parseInt(avatarNewIndex);
       const absoluteIdx = currentImages.length + newIdx;
       if (!isNaN(newIdx) && absoluteIdx >= 0 && absoluteIdx < allImages.length) {
         finalAvatarUrl = allImages[absoluteIdx].url;
+      } else {
+        finalAvatarUrl = allImages.length > 0 ? allImages[0].url : '';
       }
     } else {
-      // Không có lựa chọn mới — giữ avatarUrl cũ nếu có, hoặc lấy ảnh đầu tiên
-      finalAvatarUrl = product.avatarUrl || (allImages.length > 0 ? allImages[0].url : '');
+      // Không có lựa chọn mới — giữ avatarUrl cũ nếu còn trong allImages, không thì lấy ảnh đầu tiên
+      const oldAvatarStillExists = product.avatarUrl && allImages.some(img => img.url === product.avatarUrl);
+      finalAvatarUrl = oldAvatarStillExists ? product.avatarUrl : (allImages.length > 0 ? allImages[0].url : '');
     }
 
     // Xử lý video
