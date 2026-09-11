@@ -261,7 +261,9 @@
     <div class="admin-products-list">
       <% products.forEach(p => { %>
       <div class="admin-product-card">
-        <% const adminAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+        <% const _imgs = (p.images || []).filter(img => img && img.url && !img.url.includes("dary-bds/desc")); %>
+        <% const _avatarInList = p.avatarUrl && _imgs.some(img => img.url === p.avatarUrl); %>
+        <% const adminAvatar = _avatarInList ? p.avatarUrl : (_imgs.length > 0 ? _imgs[0].url : ""); %>
         <% if (adminAvatar) { %>
           <img class="admin-product-img" src="<%= adminAvatar %>" alt="<%= p.name %>">
         <% } else { %>
