@@ -78,9 +78,10 @@
       <source src="<%= product.video %>" type="video/mp4">
     </video>
     <% } %>
-    <% if (product.images && product.images.length > 0) { %>
+    <% const productImgs = (product.images || []).filter(img => img && img.url && !img.url.includes('dary-bds/desc')); %>
+    <% if (productImgs.length > 0) { %>
     <div class="detail-images">
-      <% product.images.forEach((img, i) => { %>
+      <% productImgs.forEach((img, i) => { %>
         <% const url = typeof img === 'string' ? img : img.url; %>
         <img class="detail-img" src="<%= url %>" alt="Ảnh <%= i+1 %>" loading="lazy" onclick="openLightbox('<%= url %>')">
       <% }) %>
