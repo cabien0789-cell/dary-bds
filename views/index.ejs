@@ -76,7 +76,8 @@
       <% } else { %>
         <% canho.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% const canhoAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% const _ci = (p.images||[]).filter(img=>img&&img.url&&!img.url.includes("dary-bds/desc")); %>
+            <% const canhoAvatar = (p.avatarUrl&&_ci.some(img=>img.url===p.avatarUrl)) ? p.avatarUrl : (_ci.length>0?_ci[0].url:""); %>
             <% if (canhoAvatar) { %>
               <img class="product-card-img" src="<%= canhoAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
@@ -107,7 +108,8 @@
       <% } else { %>
         <% nhao.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% const nhaoAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% const _ni = (p.images||[]).filter(img=>img&&img.url&&!img.url.includes("dary-bds/desc")); %>
+            <% const nhaoAvatar = (p.avatarUrl&&_ni.some(img=>img.url===p.avatarUrl)) ? p.avatarUrl : (_ni.length>0?_ni[0].url:""); %>
             <% if (nhaoAvatar) { %>
               <img class="product-card-img" src="<%= nhaoAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
@@ -138,7 +140,8 @@
       <% } else { %>
         <% dat.forEach(p => { %>
           <a href="/product/<%= p._id %>" class="product-card">
-            <% const datAvatar = p.avatarUrl || (p.images && p.images.length > 0 ? (typeof p.images[0] === 'string' ? p.images[0] : p.images[0].url) : ''); %>
+            <% const _di = (p.images||[]).filter(img=>img&&img.url&&!img.url.includes("dary-bds/desc")); %>
+            <% const datAvatar = (p.avatarUrl&&_di.some(img=>img.url===p.avatarUrl)) ? p.avatarUrl : (_di.length>0?_di[0].url:""); %>
             <% if (datAvatar) { %>
               <img class="product-card-img" src="<%= datAvatar %>" alt="<%= p.name %>" loading="lazy">
             <% } else { %>
