@@ -1575,11 +1575,11 @@ async function togglePin(id, btn) {
   const res = await fetch('/admin/products/' + id + '/pin', { method: 'POST' });
   const data = await res.json();
   if (data.error) { alert(data.error); return; }
-  // Cập nhật giao diện nút và badge không cần reload
+  const adminList = document.getElementById('adminProductList');
+  const card = btn.closest('.admin-product-card');
   if (data.pinned) {
     btn.textContent = '📌 Bỏ ghim';
     btn.classList.add('pinned');
-    const card = btn.closest('.admin-product-card');
     let badge = card.querySelector('.pin-badge');
     if (!badge) {
       badge = document.createElement('span');
@@ -1587,27 +1587,17 @@ async function togglePin(id, btn) {
       badge.textContent = '📌 Đã ghim';
       card.querySelector('.admin-product-name').prepend(badge);
     }
-    // Đưa card ghim lên đầu danh sách (trên cùng trong nhóm ghim)
-    // Khi load trang mặc định hiện tab Căn hộ
-  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
-
-  const list = document.getElementById('adminProductList');
-    const firstUnpinned = Array.from(list.querySelectorAll('.admin-product-card')).find(c => !c.querySelector('.pin-badge'));
-    if (firstUnpinned) list.insertBefore(card, firstUnpinned);
-    else list.prepend(card);
+    // Đưa card lên đầu danh sách (mới nhất ghim = đầu tiên)
+    adminList.prepend(card);
   } else {
     btn.textContent = '📌 Ghim';
     btn.classList.remove('pinned');
-    const card = btn.closest('.admin-product-card');
     const badge = card.querySelector('.pin-badge');
     if (badge) badge.remove();
-    // Đưa card về sau nhóm ghim
-    // Khi load trang mặc định hiện tab Căn hộ
-  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
-
-  const list = document.getElementById('adminProductList');
-    const lastPinned = Array.from(list.querySelectorAll('.admin-product-card')).filter(c => c.querySelector('.pin-badge')).pop();
-    if (lastPinned) list.insertBefore(card, lastPinned.nextSibling);
+    // Đưa card xuống ngay sau nhóm ghim
+    const lastPinned = Array.from(adminList.querySelectorAll('.admin-product-card')).filter(c => c.querySelector('.pin-badge')).pop();
+    if (lastPinned) adminList.insertBefore(card, lastPinned.nextSibling);
+    else adminList.prepend(card);
   }
   saveReorder();
 }

@@ -95,7 +95,7 @@ function extractImageUrlsFromContent(content) {
 
 // ─── TRANG CHỦ ────────────────────────────────────────────
 app.get('/', async (req, res) => {
-  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ pinnedAt: -1, order: 1, createdAt: -1 }).toArray();
+  const products = await getProducts().find({ hidden: { $ne: true } }).sort({ pinnedAt: -1, createdAt: -1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('index', { products, settings: settings || {} });
 });
@@ -133,7 +133,7 @@ app.get('/admin/logout', (req, res) => {
 
 // ─── ADMIN TRANG CHÍNH ────────────────────────────────────
 app.get('/admin', requireAdmin, async (req, res) => {
-  const products = await getProducts().find().sort({ pinnedAt: -1, order: 1, createdAt: -1 }).toArray();
+  const products = await getProducts().find().sort({ pinnedAt: -1, createdAt: -1 }).toArray();
   const settings = await getSettings().findOne({ key: 'contact' });
   res.render('admin', { products, settings: settings || {} });
 });
