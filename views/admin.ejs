@@ -1518,26 +1518,19 @@ function showErrorEdit(msg) {
 }
 
 // ── TAB LỌC DANH SÁCH ADMIN ──
-let currentAdminTab = 'canho';
 function switchAdminTab(tab, btn) {
-  currentAdminTab = tab;
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('#adminProductList .admin-product-card').forEach(card => {
-    if (tab === 'all' || card.dataset.category === tab) {
-      card.style.display = '';
-    } else {
-      card.style.display = 'none';
-    }
+    card.style.display = card.dataset.category === tab ? '' : 'none';
   });
 }
+// Mặc định hiện tab Căn hộ khi load trang
+switchAdminTab('canho', document.querySelector('.admin-tab.active'));
 
 // ── KÉO THẢ SẮP XẾP ──
 let dragSrc = null;
-// Khi load trang mặc định hiện tab Căn hộ
-  switchAdminTab('canho', document.querySelector('.admin-tab.active'));
-
-  const list = document.getElementById('adminProductList');
+const list = document.getElementById('adminProductList');
 if (list) {
   list.addEventListener('dragstart', e => {
     const card = e.target.closest('.admin-product-card');
