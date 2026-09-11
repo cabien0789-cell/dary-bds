@@ -779,7 +779,7 @@ async function submitEdit() {
   fd.append('description', editEditor.innerHTML);
   fd.append('deleteVideo', document.getElementById('editDeleteVideo').value);
   fd.append('avatarUrl', document.getElementById('editAvatarUrl').value || '');
-  fd.append('avatarNewIndex', '0');
+  fd.append('avatarNewIndex', document.getElementById('editAvatarNewIndex').value || '');
 
   // Ảnh bị đánh dấu xóa
   document.querySelectorAll('#editExistingImgGrid .marked-delete input[type="hidden"]').forEach(inp => {
